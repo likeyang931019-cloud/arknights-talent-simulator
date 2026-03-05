@@ -7,10 +7,10 @@ import './style.css';
 
 // 初始状态
 const initialState: GameState = {
-  talentPoints: 1000,
+  talentPoints: 1120,
   selectedOperator: 'amiya',
   operators: createInitialOperators(),
-  weightParamN: 2,
+  weightParamN: 1,
 };
 
 // 全局状态
@@ -57,14 +57,6 @@ function attachEventListeners(): void {
       setWeightParamN(newValue);
     });
   }
-
-  // 资源添加按钮
-  document.querySelectorAll('.btn-add-resource').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const addAmount = parseInt((e.currentTarget as HTMLElement).dataset.add || '0');
-      addTalentPoints(addAmount);
-    });
-  });
 
   // 干员选择
   document.querySelectorAll('.operator-card').forEach(card => {

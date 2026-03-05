@@ -87,13 +87,8 @@ export function renderResourcePanel(talentPoints: number, weightParamN: number):
         <input type="number" id="talent-points-input" class="resource-value-input" value="${talentPoints}" min="0" />
       </div>
       <div class="resource-param">
-        <span class="param-label" title="权重计算参数: Wi = (1/(当前值+1)^n) × (阶段上限-当前值)">参数n</span>
+        <span class="param-label" title="权重计算参数: Wi = (1/(当前值+1)^n) × (阶段上限-当前值) × 100">参数n</span>
         <input type="number" id="weight-param-n" class="param-input" value="${weightParamN}" min="0" max="10" step="0.1" />
-      </div>
-      <div class="resource-controls">
-        <button class="btn-add-resource" data-add="100">+100</button>
-        <button class="btn-add-resource" data-add="500">+500</button>
-        <button class="btn-add-resource" data-add="1000">+1000</button>
       </div>
     </div>
   `;
