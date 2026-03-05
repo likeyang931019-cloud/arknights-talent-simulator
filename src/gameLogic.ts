@@ -32,17 +32,23 @@ export function getCostPerUpgrade(operator: Operator): number {
   return 50;
 }
 
-// 计算属性权重
-export function calculateTalentWeight(talent: TalentConfig): number {
+// 计算属性权重（新公式）
+// Wi = (1 / (当前值 + 1)^n) × (当前阶段上限 - 当前值)
+export function calculateTalentWeight(talent: TalentConfig, n: number): number {
   if (talent.current >= talent.currentMax) return 0;
-  return 100 * (1 - talent.current / talent.currentMax);
+  // (当前值 + 1)的n次方
+  const denominator = Math.pow(talent.current + 1, n);
+  // 当前阶段上限 - 当前值
+  const remainingSpace = talent.currentMax - talent.current;
+  // 计算权重
+  return (1 / denominator) * remainingSpace;
 }
 
 // 加权随机选择一个属性
-export function weightedRandomSelect(talents: TalentConfig[]): TalentConfig | null {
+export function weightedRandomSelect(talents: TalentConfig[], n: number): TalentConfig | null {
   const weights = talents.map(t => ({
     talent: t,
-    weight: calculateTalentWeight(t),
+    weight: calculateTalentWeight(t, n),
   }));
 
   const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
@@ -84,8 +90,8 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
     return { success: false, message: '所有属性已达当前上限' };
   }
 
-  // 加权随机选择
-  const selectedTalent = weightedRandomSelect(operator.talents);
+  // 加权随机选择（传入参数n）
+  const selectedTalent = weightedRandomSelect(operator.talents, state.weightParamN);
   if (!selectedTalent) {
     return { success: false, message: '没有可升级的属性' };
   }

@@ -100,6 +100,41 @@ body {
   border-color: var(--primary-color);
 }
 
+/* 权重参数n输入 */
+.resource-param {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-light);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.param-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: help;
+}
+
+.param-input {
+  width: 60px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--warning-color);
+  background: var(--bg-dark);
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 8px;
+  text-align: center;
+  transition: border-color 0.3s;
+}
+
+.param-input:focus {
+  outline: none;
+  border-color: var(--warning-color);
+}
+
 .resource-controls {
   display: flex;
   gap: 10px;

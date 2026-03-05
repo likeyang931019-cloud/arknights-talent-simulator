@@ -33,6 +33,7 @@ export interface GameState {
   talentPoints: number;  // 玩家拥有的天赋点
   selectedOperator: string | null;
   operators: Operator[];
+  weightParamN: number;  // 权重计算参数n，默认2
 }
 
 // 加点结果

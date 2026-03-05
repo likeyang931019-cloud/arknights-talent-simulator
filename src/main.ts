@@ -10,6 +10,7 @@ const initialState: GameState = {
   talentPoints: 1000,
   selectedOperator: 'amiya',
   operators: createInitialOperators(),
+  weightParamN: 2,
 };
 
 // 全局状态
@@ -45,6 +46,15 @@ function attachEventListeners(): void {
     talentPointsInput.addEventListener('change', (e) => {
       const newValue = parseInt((e.target as HTMLInputElement).value);
       setTalentPoints(newValue);
+    });
+  }
+
+  // 权重参数n输入框
+  const weightParamNInput = document.getElementById('weight-param-n') as HTMLInputElement;
+  if (weightParamNInput) {
+    weightParamNInput.addEventListener('change', (e) => {
+      const newValue = parseFloat((e.target as HTMLInputElement).value);
+      setWeightParamN(newValue);
     });
   }
 
@@ -114,6 +124,15 @@ function setTalentPoints(value: number): void {
   };
   updateResourceDisplay();
   updateUpgradeButton();
+}
+
+// 设置权重参数n
+function setWeightParamN(value: number): void {
+  state = {
+    ...state,
+    weightParamN: Math.max(0, value),
+  };
+  render();
 }
 
 // 选择干员

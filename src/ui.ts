@@ -20,19 +20,19 @@ export function createFloatingText(text: string, talentName: string): FloatingTe
 }
 
 // 渲染属性条
-export function renderTalentBar(talent: TalentConfig, isUpgraded: boolean, maxTotalMax: number): string {
+export function renderTalentBar(talent: TalentConfig, isUpgraded: boolean, maxTotalMax: number, n: number): string {
   const percentage = (talent.current / talent.totalMax) * 100;
   const currentPercentage = (talent.currentMax / talent.totalMax) * 100;
   // 进度条总长度按总上限比例缩放
   const barWidthPercentage = (talent.totalMax / maxTotalMax) * 100;
-  // 计算权重并四舍五入取整
-  const weight = Math.round(calculateTalentWeight(talent));
+  // 计算权重（新公式）并四舍五入取整
+  const weight = Math.round(calculateTalentWeight(talent, n));
   
   return `
     <div class="talent-bar-container" data-talent="${talent.name}">
       <div class="talent-header">
         <span class="talent-name">${talent.name}</span>
-        <span class="talent-weight" title="随机权重">权重:${weight}</span>
+        <span class="talent-weight" title="随机权重 (n=${n})">权重:${weight}</span>
         <span class="talent-values">
           <span class="current-value ${isUpgraded ? 'upgraded' : ''}">${talent.current}</span>
           <span class="separator">/</span>
@@ -78,13 +78,17 @@ export function renderOperatorCard(operator: Operator, isSelected: boolean): str
 }
 
 // 渲染资源面板
-export function renderResourcePanel(talentPoints: number): string {
+export function renderResourcePanel(talentPoints: number, weightParamN: number): string {
   return `
     <div class="resource-panel">
       <div class="resource-item">
         <span class="resource-icon">💎</span>
         <span class="resource-name">天赋点</span>
         <input type="number" id="talent-points-input" class="resource-value-input" value="${talentPoints}" min="0" />
+      </div>
+      <div class="resource-param">
+        <span class="param-label" title="权重计算参数: Wi = (1/(当前值+1)^n) × (阶段上限-当前值)">参数n</span>
+        <input type="number" id="weight-param-n" class="param-input" value="${weightParamN}" min="0" max="10" step="0.1" />
       </div>
       <div class="resource-controls">
         <button class="btn-add-resource" data-add="100">+100</button>
@@ -166,7 +170,7 @@ export function renderApp(state: GameState, lastUpgradedTalent: string | null): 
         <p class="subtitle">全新养成机制原型验证</p>
       </header>
       
-      ${renderResourcePanel(state.talentPoints)}
+      ${renderResourcePanel(state.talentPoints, state.weightParamN)}
       
       <div class="main-content">
         <aside class="operator-list">
@@ -177,7 +181,7 @@ export function renderApp(state: GameState, lastUpgradedTalent: string | null): 
         </aside>
         
         <main class="operator-detail">
-          ${selectedOperator ? renderOperatorDetail(selectedOperator, state.talentPoints, lastUpgradedTalent) : renderEmptyState()}
+          ${selectedOperator ? renderOperatorDetail(selectedOperator, state.talentPoints, lastUpgradedTalent, state.weightParamN) : renderEmptyState()}
         </main>
       </div>
     </div>
@@ -185,7 +189,7 @@ export function renderApp(state: GameState, lastUpgradedTalent: string | null): 
 }
 
 // 渲染干员详情
-function renderOperatorDetail(operator: Operator, talentPoints: number, lastUpgradedTalent: string | null): string {
+function renderOperatorDetail(operator: Operator, talentPoints: number, lastUpgradedTalent: string | null, n: number): string {
   const cost = getCostPerUpgrade(operator);
   const canUpgrade = talentPoints >= cost && getRemainingPointsInStage(operator) > 0;
   // 计算该干员中最大的总上限，用于进度条比例
@@ -209,7 +213,7 @@ function renderOperatorDetail(operator: Operator, talentPoints: number, lastUpgr
       <div class="talents-section">
         <h3>天赋属性</h3>
         <div class="talents-list">
-          ${operator.talents.map(t => renderTalentBar(t, t.name === lastUpgradedTalent, maxTotalMax)).join('')}
+          ${operator.talents.map(t => renderTalentBar(t, t.name === lastUpgradedTalent, maxTotalMax, n)).join('')}
         </div>
       </div>
       
