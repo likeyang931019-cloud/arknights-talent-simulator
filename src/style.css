@@ -1,0 +1,539 @@
+/* 明日方舟天赋养成模拟器 - 样式 */
+
+:root {
+  --primary-color: #00a8ff;
+  --secondary-color: #0097e6;
+  --success-color: #4cd137;
+  --warning-color: #fbc531;
+  --danger-color: #e84118;
+  --bg-dark: #1e272e;
+  --bg-card: #2f3640;
+  --bg-light: #353b48;
+  --text-primary: #f5f6fa;
+  --text-secondary: #dcdde1;
+  --text-muted: #7f8fa4;
+  --border-color: #718093;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(135deg, var(--bg-dark) 0%, #2c3e50 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.arknights-talent-simulator {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(90deg, transparent, rgba(0, 168, 255, 0.1), transparent);
+}
+
+.app-header h1 {
+  font-size: 2rem;
+  background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.resource-panel {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border-color);
+}
+
+.resource-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+}
+
+.resource-icon {
+  font-size: 1.5rem;
+}
+
+.resource-name {
+  color: var(--text-secondary);
+}
+
+.resource-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  min-width: 80px;
+  text-align: right;
+}
+
+.resource-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-add-resource {
+  background: var(--bg-light);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+}
+
+.btn-add-resource:hover {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+}
+
+.operator-list {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+}
+
+.operator-list h2 {
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  color: var(--text-secondary);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.operators {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.operator-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  background: var(--bg-light);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.operator-card:hover {
+  background: #3d4654;
+  transform: translateX(5px);
+}
+
+.operator-card.selected {
+  border-color: var(--primary-color);
+  background: rgba(0, 168, 255, 0.15);
+}
+
+.operator-avatar {
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-dark);
+  border-radius: 50%;
+}
+
+.operator-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.operator-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  font-size: 0.85rem;
+}
+
+.progress-text {
+  color: var(--text-muted);
+}
+
+.stage-badge {
+  background: var(--primary-color);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+}
+
+.operator-detail {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 25px;
+  border: 1px solid var(--border-color);
+}
+
+.detail-card {
+  height: 100%;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detail-avatar {
+  font-size: 3.5rem;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--bg-dark), var(--bg-light));
+  border-radius: 16px;
+  border: 2px solid var(--primary-color);
+}
+
+.detail-title h2 {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+}
+
+.detail-stats {
+  display: flex;
+  gap: 20px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.level-control {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  padding: 15px;
+  background: var(--bg-light);
+  border-radius: 10px;
+}
+
+.level-label {
+  font-weight: bold;
+  color: var(--text-secondary);
+}
+
+.level-input-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-level {
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.85rem;
+}
+
+.btn-level:hover {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+#level-input {
+  width: 60px;
+  text-align: center;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.stage-info {
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  margin-left: auto;
+}
+
+.talents-section {
+  margin-bottom: 25px;
+}
+
+.talents-section h3 {
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  color: var(--text-secondary);
+}
+
+.talents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.talent-bar-container {
+  background: var(--bg-light);
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.talent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.talent-name {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.talent-values {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.95rem;
+}
+
+.current-value {
+  color: var(--primary-color);
+  font-weight: bold;
+  font-size: 1.1rem;
+  transition: all 0.3s;
+}
+
+.current-value.upgraded {
+  color: var(--success-color);
+  transform: scale(1.3);
+}
+
+.separator {
+  color: var(--text-muted);
+}
+
+.current-max {
+  color: var(--warning-color);
+}
+
+.total-max {
+  color: var(--text-muted);
+}
+
+.talent-progress-wrapper {
+  position: relative;
+  height: 20px;
+}
+
+.talent-progress-bg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-dark);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.talent-progress-current-max {
+  position: absolute;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(251, 197, 49, 0.3),
+    rgba(251, 197, 49, 0.3) 10px,
+    rgba(251, 197, 49, 0.1) 10px,
+    rgba(251, 197, 49, 0.1) 20px
+  );
+  border-right: 2px dashed var(--warning-color);
+  transition: width 0.5s ease;
+}
+
+.talent-progress-fill {
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+.talent-progress-fill.upgraded {
+  background: linear-gradient(90deg, var(--success-color), #44bd32);
+  box-shadow: 0 0 10px rgba(76, 209, 55, 0.5);
+  animation: pulse 0.5s ease;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.floating-text {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--success-color);
+  font-weight: bold;
+  font-size: 1.2rem;
+  animation: floatUp 1s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-80px) scale(1.5);
+  }
+}
+
+.upgrade-panel {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  background: var(--bg-light);
+  border-radius: 10px;
+}
+
+.upgrade-status {
+  flex: 1;
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.btn-upgrade {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.btn-upgrade:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(0, 168, 255, 0.4);
+}
+
+.btn-upgrade:disabled {
+  background: var(--bg-dark);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.btn-text {
+  font-size: 1.2rem;
+}
+
+.btn-cost {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.btn-reset {
+  background: var(--bg-dark);
+  border: 1px solid var(--danger-color);
+  color: var(--danger-color);
+  padding: 12px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.95rem;
+}
+
+.btn-reset:hover {
+  background: var(--danger-color);
+  color: white;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@media (max-width: 900px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .operator-list {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  .operators {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .operator-card {
+    flex: 1;
+    min-width: 150px;
+  }
+}
