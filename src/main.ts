@@ -20,6 +20,7 @@ import type { GameState, Operator } from './types';
 import { createInitialOperators, updateOperatorLevel, resetOperator } from './data';
 import { upgradeTalent, applyUpgrade, getTotalAddedPoints, getRemainingPointsInStage, getCostPerUpgrade } from './gameLogic';
 import { renderApp } from './ui';
+import { createInitialGuidanceStones } from './types';
 import './style.css';
 
 // 初始状态
@@ -27,7 +28,8 @@ const initialState: GameState = {
   talentPoints: 1120,
   selectedOperator: 'amiya',
   operators: createInitialOperators(),
-  weightParamN: 1,
+  weightParamN: 0.3,
+  guidanceStones: createInitialGuidanceStones(),
 };
 
 // 全局状态
@@ -113,6 +115,17 @@ function attachEventListeners(): void {
   if (resetBtn) {
     resetBtn.addEventListener('click', handleReset);
   }
+
+  // 引导石复选框
+  document.querySelectorAll('.stone-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+      const stoneType = (e.currentTarget as HTMLElement).dataset.stoneType;
+      const isChecked = (e.target as HTMLInputElement).checked;
+      if (stoneType) {
+        toggleGuidanceStone(stoneType, isChecked);
+      }
+    });
+  });
 }
 
 // 添加天赋点
@@ -141,6 +154,36 @@ function setWeightParamN(value: number): void {
     ...state,
     weightParamN: Math.max(0, value),
   };
+  render();
+}
+
+// 切换引导石选择
+function toggleGuidanceStone(stoneType: string, isSelected: boolean): void {
+  const combatTypes = ['攻', '防', '辅'];
+  const natureTypes = ['生理', '心理'];
+  
+  state = {
+    ...state,
+    guidanceStones: state.guidanceStones.map(stone => {
+      // 如果点击的是当前石头，切换状态
+      if (stone.type === stoneType) {
+        return { ...stone, selected: isSelected };
+      }
+      
+      // 互斥逻辑：攻/防/辅互斥
+      if (combatTypes.includes(stoneType) && combatTypes.includes(stone.type)) {
+        return { ...stone, selected: false };
+      }
+      
+      // 互斥逻辑：生理/心理互斥
+      if (natureTypes.includes(stoneType) && natureTypes.includes(stone.type)) {
+        return { ...stone, selected: false };
+      }
+      
+      return stone;
+    }),
+  };
+  
   render();
 }
 
@@ -214,7 +257,9 @@ function handleUpgrade(): void {
     
     updateResourceDisplay();
     render();
-    showToast(`${operator.name} 的 ${result.upgradedTalent} 提升了！`, 'success');
+    
+    const stoneMsg = result.consumedStone ? ` (消耗引导石-${result.consumedStone})` : '';
+    showToast(`${operator.name} 的 ${result.upgradedTalent} 提升了！${stoneMsg}`, 'success');
     
     // 清除飘字动画状态
     setTimeout(() => {
@@ -258,10 +303,12 @@ function handleReset(): void {
     ...state,
     talentPoints: state.talentPoints + refundedPoints,
     operators: updatedOperators,
+    // 一键清零后引导石回退到初始状态（每种10个）
+    guidanceStones: createInitialGuidanceStones(),
   };
 
   render();
-  showToast(`已重置养成进度，返还 ${refundedPoints} 天赋点`, 'success');
+  showToast(`已重置养成进度，返还 ${refundedPoints} 天赋点，引导石已回退`, 'success');
 }
 
 // 更新资源显示

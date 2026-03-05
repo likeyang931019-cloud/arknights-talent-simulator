@@ -598,3 +598,124 @@ body {
     min-width: 150px;
   }
 }
+
+/* 引导石系统 */
+.guidance-stones-panel {
+  margin-top: 20px;
+  padding: 15px;
+  background: var(--bg-light);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.guidance-stones-title {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.guidance-stones-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.guidance-stone-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg-dark);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  user-select: none;
+}
+
+.guidance-stone-item:hover:not(.disabled) {
+  border-color: var(--primary-color);
+  background: rgba(0, 168, 255, 0.1);
+}
+
+.guidance-stone-item.selected {
+  border-color: var(--success-color);
+  background: rgba(76, 209, 55, 0.1);
+}
+
+.guidance-stone-item.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg-dark);
+}
+
+.stone-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.stone-checkbox:disabled {
+  cursor: not-allowed;
+}
+
+.stone-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.stone-count {
+  font-size: 0.8rem;
+  color: var(--warning-color);
+  font-weight: bold;
+}
+
+/* 属性标签 */
+.talent-tags {
+  display: flex;
+  gap: 4px;
+  margin-right: 8px;
+}
+
+.tag {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.tag-combat {
+  background: rgba(232, 65, 24, 0.3);
+  color: #ff6b6b;
+}
+
+.tag-nature {
+  background: rgba(0, 168, 255, 0.3);
+  color: #74b9ff;
+}
+
+/* 属性条高亮/置灰 */
+.talent-bar-container.highlighted {
+  opacity: 1;
+}
+
+.talent-bar-container.dimmed {
+  opacity: 0.4;
+}
+
+.talent-bar-container.dimmed .talent-name {
+  color: var(--text-muted);
+}
+
+/* 公式显示 */
+.param-formula {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--bg-dark);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  margin-right: 8px;
+}

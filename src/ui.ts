@@ -1,7 +1,7 @@
 // 明日方舟天赋养成模拟器 - UI组件
-import type { Operator, TalentConfig, GameState } from './types';
+import type { Operator, TalentConfig, GameState, GuidanceStone, TalentType } from './types';
+import { TALENT_COMBAT_TYPE, TALENT_NATURE_TYPE, isTalentMatchGuidanceStone, getStageByLevel } from './types';
 import { getTotalAddedPoints, getRemainingPointsInStage, getCostPerUpgrade, getCurrentStagePoints, calculateTalentWeight } from './gameLogic';
-import { getStageByLevel } from './types';
 
 // 飘字动画状态
 interface FloatingText {
@@ -20,7 +20,13 @@ export function createFloatingText(text: string, talentName: string): FloatingTe
 }
 
 // 渲染属性条
-export function renderTalentBar(talent: TalentConfig, isUpgraded: boolean, maxTotalMax: number, n: number): string {
+export function renderTalentBar(
+  talent: TalentConfig, 
+  isUpgraded: boolean, 
+  maxTotalMax: number, 
+  n: number,
+  isHighlighted: boolean = true
+): string {
   const percentage = (talent.current / talent.totalMax) * 100;
   const currentPercentage = (talent.currentMax / talent.totalMax) * 100;
   // 进度条总长度按总上限比例缩放
@@ -29,9 +35,13 @@ export function renderTalentBar(talent: TalentConfig, isUpgraded: boolean, maxTo
   const weight = Math.round(calculateTalentWeight(talent, n));
   
   return `
-    <div class="talent-bar-container" data-talent="${talent.name}">
+    <div class="talent-bar-container ${isHighlighted ? 'highlighted' : 'dimmed'}" data-talent="${talent.name}">
       <div class="talent-header">
         <span class="talent-name">${talent.name}</span>
+        <span class="talent-tags">
+          <span class="tag tag-combat">${TALENT_COMBAT_TYPE[talent.name]}</span>
+          <span class="tag tag-nature">${TALENT_NATURE_TYPE[talent.name]}</span>
+        </span>
         <span class="talent-weight" title="随机权重 (n=${n})">权重:${weight}</span>
         <span class="talent-values">
           <span class="current-value ${isUpgraded ? 'upgraded' : ''}">${talent.current}</span>
@@ -87,7 +97,8 @@ export function renderResourcePanel(talentPoints: number, weightParamN: number):
         <input type="number" id="talent-points-input" class="resource-value-input" value="${talentPoints}" min="0" />
       </div>
       <div class="resource-param">
-        <span class="param-label" title="权重计算参数: Wi = (1/(当前值+1)^n) × (阶段上限-当前值) × 100">参数n</span>
+        <span class="param-formula" title="权重计算公式">Wi=(1/(v+1)^n)×(max-v)×100</span>
+        <span class="param-label">参数n</span>
         <input type="number" id="weight-param-n" class="param-input" value="${weightParamN}" min="0" max="10" step="0.1" />
       </div>
     </div>
@@ -124,12 +135,75 @@ function getStageInfo(level: number): string {
   return `阶段${stageNum} (可加点至${stage.totalPoints}点${nextUnlock !== '已满' ? `, 下档${nextUnlock}级` : ''})`;
 }
 
+// 渲染引导石
+export function renderGuidanceStones(
+  stones: GuidanceStone[],
+  operator: Operator,
+  currentStage: number
+): string {
+  // 阶段1不能使用引导石
+  const isStage1 = currentStage === 1;
+  
+  // 检查干员拥有的属性类型
+  const operatorTalents = operator.talents.map(t => t.name);
+  const hasCombatType = (type: '攻' | '防' | '辅') => 
+    operatorTalents.some(t => TALENT_COMBAT_TYPE[t] === type);
+  const hasNatureType = (type: '生理' | '心理') => 
+    operatorTalents.some(t => TALENT_NATURE_TYPE[t] === type);
+  
+  // 检查是否有选中的互斥组
+  const combatSelected = stones.find(s => ['攻', '防', '辅'].includes(s.type) && s.selected);
+  const natureSelected = stones.find(s => ['生理', '心理'].includes(s.type) && s.selected);
+  
+  return `
+    <div class="guidance-stones-panel">
+      <div class="guidance-stones-title">引导石 (阶段2+可用)</div>
+      <div class="guidance-stones-list">
+        ${stones.map(stone => {
+          // 判断该引导石是否适用当前干员
+          const hasMatchingTalent = stone.type === '攻' || stone.type === '防' || stone.type === '辅'
+            ? hasCombatType(stone.type)
+            : hasNatureType(stone.type);
+          
+          // 判断是否被互斥禁用
+          const isMutuallyExcluded = 
+            (['攻', '防', '辅'].includes(stone.type) && combatSelected && combatSelected.type !== stone.type) ||
+            (['生理', '心理'].includes(stone.type) && natureSelected && natureSelected.type !== stone.type);
+          
+          // 最终禁用状态
+          const isDisabled = isStage1 || !hasMatchingTalent || isMutuallyExcluded || stone.count === 0;
+          
+          return `
+            <label class="guidance-stone-item ${isDisabled ? 'disabled' : ''} ${stone.selected ? 'selected' : ''}" 
+                   data-stone-type="${stone.type}">
+              <input type="checkbox" class="stone-checkbox" 
+                     data-stone-type="${stone.type}"
+                     ${stone.selected ? 'checked' : ''} 
+                     ${isDisabled ? 'disabled' : ''}>
+              <span class="stone-name">${stone.name}</span>
+              <span class="stone-count">×${stone.count}</span>
+            </label>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
 // 渲染养成控制面板
-export function renderUpgradePanel(operator: Operator, canUpgrade: boolean): string {
+export function renderUpgradePanel(
+  operator: Operator, 
+  canUpgrade: boolean, 
+  stones: GuidanceStone[],
+  n: number
+): string {
   const cost = getCostPerUpgrade(operator);
   const remaining = getRemainingPointsInStage(operator);
   const totalAdded = getTotalAddedPoints(operator);
   const stage = getStageByLevel(operator.currentLevel);
+  
+  // 计算当前阶段
+  const currentStage = stage.totalPoints === 14 ? 1 : stage.totalPoints === 28 ? 2 : stage.totalPoints === 42 ? 3 : 0;
   
   let statusText = '';
   if (stage.totalPoints === 0) {
@@ -151,6 +225,7 @@ export function renderUpgradePanel(operator: Operator, canUpgrade: boolean): str
       </button>
       <button class="btn-reset" id="btn-reset">🔄 一键清零</button>
     </div>
+    ${renderGuidanceStones(stones, operator, currentStage)}
   `;
 }
 
@@ -176,7 +251,7 @@ export function renderApp(state: GameState, lastUpgradedTalent: string | null): 
         </aside>
         
         <main class="operator-detail">
-          ${selectedOperator ? renderOperatorDetail(selectedOperator, state.talentPoints, lastUpgradedTalent, state.weightParamN) : renderEmptyState()}
+          ${selectedOperator ? renderOperatorDetail(selectedOperator, state.talentPoints, lastUpgradedTalent, state.weightParamN, state.guidanceStones) : renderEmptyState()}
         </main>
       </div>
     </div>
@@ -184,11 +259,22 @@ export function renderApp(state: GameState, lastUpgradedTalent: string | null): 
 }
 
 // 渲染干员详情
-function renderOperatorDetail(operator: Operator, talentPoints: number, lastUpgradedTalent: string | null, n: number): string {
+function renderOperatorDetail(
+  operator: Operator, 
+  talentPoints: number, 
+  lastUpgradedTalent: string | null, 
+  n: number,
+  guidanceStones: GuidanceStone[]
+): string {
   const cost = getCostPerUpgrade(operator);
   const canUpgrade = talentPoints >= cost && getRemainingPointsInStage(operator) > 0;
   // 计算该干员中最大的总上限，用于进度条比例
   const maxTotalMax = Math.max(...operator.talents.map(t => t.totalMax));
+  
+  // 获取当前选中的引导石类型
+  const selectedStoneTypes = guidanceStones
+    .filter(s => s.selected && !s.disabled)
+    .map(s => s.type);
   
   return `
     <div class="detail-card">
@@ -208,11 +294,16 @@ function renderOperatorDetail(operator: Operator, talentPoints: number, lastUpgr
       <div class="talents-section">
         <h3>天赋属性</h3>
         <div class="talents-list">
-          ${operator.talents.map(t => renderTalentBar(t, t.name === lastUpgradedTalent, maxTotalMax, n)).join('')}
+          ${operator.talents.map(t => {
+            // 判断是否被引导石高亮
+            const isHighlighted = selectedStoneTypes.length === 0 || 
+              selectedStoneTypes.some(stoneType => isTalentMatchGuidanceStone(t.name, stoneType));
+            return renderTalentBar(t, t.name === lastUpgradedTalent, maxTotalMax, n, isHighlighted);
+          }).join('')}
         </div>
       </div>
       
-      ${renderUpgradePanel(operator, canUpgrade)}
+      ${renderUpgradePanel(operator, canUpgrade, guidanceStones, n)}
     </div>
   `;
 }

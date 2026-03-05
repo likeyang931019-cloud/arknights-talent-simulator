@@ -1,6 +1,6 @@
 // 明日方舟天赋养成模拟器 - 核心逻辑
-import type { Operator, TalentConfig, UpgradeResult, GameState } from './types';
-import { getStageByLevel } from './types';
+import type { Operator, TalentConfig, UpgradeResult, GameState, GuidanceStoneType } from './types';
+import { getStageByLevel, isTalentMatchGuidanceStone } from './types';
 
 // 计算干员当前已加的总点数
 export function getTotalAddedPoints(operator: Operator): number {
@@ -44,28 +44,8 @@ export function calculateTalentWeight(talent: TalentConfig, n: number): number {
   return (1 / denominator) * remainingSpace * 100;
 }
 
-// 加权随机选择一个属性
-export function weightedRandomSelect(talents: TalentConfig[], n: number): TalentConfig | null {
-  const weights = talents.map(t => ({
-    talent: t,
-    weight: calculateTalentWeight(t, n),
-  }));
-
-  const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
-  if (totalWeight <= 0) return null;
-
-  let random = Math.random() * totalWeight;
-  
-  for (const { talent, weight } of weights) {
-    random -= weight;
-    if (random <= 0) return talent;
-  }
-
-  return weights[weights.length - 1]?.talent || null;
-}
-
-// 执行加点
-export function upgradeTalent(state: GameState, operatorId: string): UpgradeResult {
+// 执行加点（支持引导石）
+export function upgradeTalent(state: GameState, operatorId: string): UpgradeResult & { consumedStone?: GuidanceStoneType } {
   const operator = state.operators.find(o => o.id === operatorId);
   if (!operator) {
     return { success: false, message: '干员不存在' };
@@ -84,41 +64,77 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
     return { success: false, message: '当前阶段已加满，请提升等级' };
   }
 
-  // 检查是否有可升级的属性
-  const upgradableTalents = operator.talents.filter(t => t.current < t.currentMax);
+  // 获取当前阶段
+  const stage = getStageByLevel(operator.currentLevel);
+  const currentStage = stage.totalPoints === 14 ? 1 : stage.totalPoints === 28 ? 2 : 3;
+  
+  // 获取选中的引导石（阶段1不能使用）
+  const selectedStone = currentStage > 1 
+    ? state.guidanceStones.find(s => s.selected && s.count > 0)
+    : undefined;
+
+  // 筛选可升级的属性
+  let upgradableTalents = operator.talents.filter(t => t.current < t.currentMax);
+  
+  // 如果有引导石，进一步筛选
+  if (selectedStone) {
+    upgradableTalents = upgradableTalents.filter(t => 
+      isTalentMatchGuidanceStone(t.name, selectedStone.type)
+    );
+    if (upgradableTalents.length === 0) {
+      return { success: false, message: '没有符合引导石条件的属性可升级' };
+    }
+  }
+
   if (upgradableTalents.length === 0) {
     return { success: false, message: '所有属性已达当前上限' };
   }
 
-  // 加权随机选择（传入参数n）
-  const selectedTalent = weightedRandomSelect(operator.talents, state.weightParamN);
-  if (!selectedTalent) {
+  // 加权随机选择
+  const weights = upgradableTalents.map(t => ({
+    talent: t,
+    weight: calculateTalentWeight(t, state.weightParamN),
+  }));
+
+  const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
+  if (totalWeight <= 0) {
     return { success: false, message: '没有可升级的属性' };
   }
 
-  // 执行升级
-  const updatedOperators = state.operators.map(o => {
-    if (o.id !== operatorId) return o;
-    
-    return {
-      ...o,
-      talents: o.talents.map(t => {
-        if (t.name !== selectedTalent.name) return t;
-        return { ...t, current: t.current + 1 };
-      }),
-    };
-  });
+  let random = Math.random() * totalWeight;
+  let selectedTalent: TalentConfig | null = null;
+  
+  for (const { talent, weight } of weights) {
+    random -= weight;
+    if (random <= 0) {
+      selectedTalent = talent;
+      break;
+    }
+  }
+  
+  if (!selectedTalent) {
+    selectedTalent = weights[weights.length - 1]?.talent || null;
+  }
+
+  if (!selectedTalent) {
+    return { success: false, message: '没有可升级的属性' };
+  }
 
   return {
     success: true,
     upgradedTalent: selectedTalent.name,
     cost,
     message: `${selectedTalent.name} +1`,
+    consumedStone: selectedStone?.type,
   };
 }
 
 // 更新游戏状态（加点后）
-export function applyUpgrade(state: GameState, result: UpgradeResult, operatorId: string): GameState {
+export function applyUpgrade(
+  state: GameState, 
+  result: UpgradeResult & { consumedStone?: GuidanceStoneType }, 
+  operatorId: string
+): GameState {
   if (!result.success || !result.cost) return state;
 
   return {
@@ -135,5 +151,13 @@ export function applyUpgrade(state: GameState, result: UpgradeResult, operatorId
         }),
       };
     }),
+    // 消耗引导石
+    guidanceStones: result.consumedStone 
+      ? state.guidanceStones.map(s => 
+          s.type === result.consumedStone 
+            ? { ...s, count: s.count - 1, selected: false }
+            : s
+        )
+      : state.guidanceStones,
   };
 }

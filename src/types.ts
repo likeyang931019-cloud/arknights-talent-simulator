@@ -33,7 +33,8 @@ export interface GameState {
   talentPoints: number;  // 玩家拥有的天赋点
   selectedOperator: string | null;
   operators: Operator[];
-  weightParamN: number;  // 权重计算参数n，默认2
+  weightParamN: number;  // 权重计算参数n，默认0.3
+  guidanceStones: GuidanceStone[];  // 5种引导石
 }
 
 // 加点结果
@@ -98,3 +99,67 @@ export function calculateCurrentMax(totalMax: number, level: number): number {
 export const ALL_TALENT_TYPES: TalentType[] = [
   '勇气', '体魄', '毅力', '信念', '灵巧', '智慧', '魅力', '感知', '感应'
 ];
+
+// ==================== 属性分类系统 ====================
+// 维度1：攻 / 防 / 辅
+export type CombatType = '攻' | '防' | '辅';
+// 维度2：生理 / 心理
+export type NatureType = '生理' | '心理';
+
+// 属性分类映射（可根据设计调整）
+export const TALENT_COMBAT_TYPE: Record<TalentType, CombatType> = {
+  '勇气': '攻',
+  '体魄': '防',
+  '毅力': '防',
+  '信念': '辅',
+  '灵巧': '攻',
+  '智慧': '辅',
+  '魅力': '辅',
+  '感知': '辅',
+  '感应': '辅',
+};
+
+export const TALENT_NATURE_TYPE: Record<TalentType, NatureType> = {
+  '勇气': '生理',
+  '体魄': '生理',
+  '毅力': '生理',
+  '信念': '心理',
+  '灵巧': '生理',
+  '智慧': '心理',
+  '魅力': '心理',
+  '感知': '生理',
+  '感应': '心理',
+};
+
+// ==================== 引导石系统 ====================
+export type GuidanceStoneType = '攻' | '防' | '辅' | '生理' | '心理';
+
+export interface GuidanceStone {
+  type: GuidanceStoneType;
+  name: string;
+  count: number;
+  selected: boolean;
+  disabled: boolean;
+}
+
+// 创建初始引导石
+export function createInitialGuidanceStones(): GuidanceStone[] {
+  return [
+    { type: '攻', name: '引导石-攻', count: 10, selected: false, disabled: false },
+    { type: '防', name: '引导石-防', count: 10, selected: false, disabled: false },
+    { type: '辅', name: '引导石-辅', count: 10, selected: false, disabled: false },
+    { type: '生理', name: '引导石-生理', count: 10, selected: false, disabled: false },
+    { type: '心理', name: '引导石-心理', count: 10, selected: false, disabled: false },
+  ];
+}
+
+// 检查属性是否符合引导石条件
+export function isTalentMatchGuidanceStone(
+  talentName: TalentType,
+  stoneType: GuidanceStoneType
+): boolean {
+  if (stoneType === '攻' || stoneType === '防' || stoneType === '辅') {
+    return TALENT_COMBAT_TYPE[talentName] === stoneType;
+  }
+  return TALENT_NATURE_TYPE[talentName] === stoneType;
+}
