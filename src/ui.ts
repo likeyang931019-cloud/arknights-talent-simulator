@@ -20,9 +20,11 @@ export function createFloatingText(text: string, talentName: string): FloatingTe
 }
 
 // 渲染属性条
-export function renderTalentBar(talent: TalentConfig, isUpgraded: boolean): string {
+export function renderTalentBar(talent: TalentConfig, isUpgraded: boolean, maxTotalMax: number): string {
   const percentage = (talent.current / talent.totalMax) * 100;
   const currentPercentage = (talent.currentMax / talent.totalMax) * 100;
+  // 进度条总长度按总上限比例缩放
+  const barWidthPercentage = (talent.totalMax / maxTotalMax) * 100;
   
   return `
     <div class="talent-bar-container" data-talent="${talent.name}">
@@ -37,7 +39,7 @@ export function renderTalentBar(talent: TalentConfig, isUpgraded: boolean): stri
           <span class="separator">)</span>
         </span>
       </div>
-      <div class="talent-progress-wrapper">
+      <div class="talent-progress-wrapper" style="width: ${barWidthPercentage}%">
         <div class="talent-progress-bg">
           <div class="talent-progress-current-max" style="width: ${currentPercentage}%"></div>
           <div class="talent-progress-fill ${isUpgraded ? 'upgraded' : ''}" style="width: ${percentage}%"></div>
@@ -75,7 +77,7 @@ export function renderResourcePanel(talentPoints: number): string {
       <div class="resource-item">
         <span class="resource-icon">💎</span>
         <span class="resource-name">天赋点</span>
-        <span class="resource-value" id="talent-points">${talentPoints}</span>
+        <input type="number" id="talent-points-input" class="resource-value-input" value="${talentPoints}" min="0" />
       </div>
       <div class="resource-controls">
         <button class="btn-add-resource" data-add="100">+100</button>
@@ -169,6 +171,8 @@ export function renderApp(state: GameState, lastUpgradedTalent: string | null): 
 function renderOperatorDetail(operator: Operator, talentPoints: number, lastUpgradedTalent: string | null): string {
   const cost = getCostPerUpgrade(operator);
   const canUpgrade = talentPoints >= cost && getRemainingPointsInStage(operator) > 0;
+  // 计算该干员中最大的总上限，用于进度条比例
+  const maxTotalMax = Math.max(...operator.talents.map(t => t.totalMax));
   
   return `
     <div class="detail-card">
@@ -188,7 +192,7 @@ function renderOperatorDetail(operator: Operator, talentPoints: number, lastUpgr
       <div class="talents-section">
         <h3>天赋属性</h3>
         <div class="talents-list">
-          ${operator.talents.map(t => renderTalentBar(t, t.name === lastUpgradedTalent)).join('')}
+          ${operator.talents.map(t => renderTalentBar(t, t.name === lastUpgradedTalent, maxTotalMax)).join('')}
         </div>
       </div>
       

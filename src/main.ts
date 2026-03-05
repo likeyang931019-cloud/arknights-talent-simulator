@@ -39,6 +39,15 @@ function render(): void {
 
 // 绑定事件监听
 function attachEventListeners(): void {
+  // 天赋点输入框
+  const talentPointsInput = document.getElementById('talent-points-input') as HTMLInputElement;
+  if (talentPointsInput) {
+    talentPointsInput.addEventListener('change', (e) => {
+      const newValue = parseInt((e.target as HTMLInputElement).value);
+      setTalentPoints(newValue);
+    });
+  }
+
   // 资源添加按钮
   document.querySelectorAll('.btn-add-resource').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -91,7 +100,17 @@ function attachEventListeners(): void {
 function addTalentPoints(amount: number): void {
   state = {
     ...state,
-    talentPoints: state.talentPoints + amount,
+    talentPoints: Math.max(0, state.talentPoints + amount),
+  };
+  updateResourceDisplay();
+  updateUpgradeButton();
+}
+
+// 设置天赋点（直接输入）
+function setTalentPoints(value: number): void {
+  state = {
+    ...state,
+    talentPoints: Math.max(0, value),
   };
   updateResourceDisplay();
   updateUpgradeButton();

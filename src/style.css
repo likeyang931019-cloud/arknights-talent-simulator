@@ -82,12 +82,22 @@ body {
   color: var(--text-secondary);
 }
 
-.resource-value {
+.resource-value-input {
+  width: 120px;
   font-size: 1.5rem;
   font-weight: bold;
   color: var(--primary-color);
-  min-width: 80px;
-  text-align: right;
+  background: var(--bg-dark);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: center;
+  transition: border-color 0.3s;
+}
+
+.resource-value-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
 }
 
 .resource-controls {
@@ -362,6 +372,9 @@ body {
 .talent-progress-wrapper {
   position: relative;
   height: 20px;
+  width: 100%;
+  min-width: 20%;
+  transition: width 0.5s ease;
 }
 
 .talent-progress-bg {
