@@ -139,10 +139,10 @@ function getStageInfo(level: number): string {
 export function renderGuidanceStones(
   stones: GuidanceStone[],
   operator: Operator,
-  currentStage: number
+  totalAdded: number
 ): string {
-  // 阶段1不能使用引导石
-  const isStage1 = currentStage === 1;
+  // 必须已加14点后才可使用引导石
+  const canUseStones = totalAdded >= 14;
   
   // 检查干员拥有的属性类型
   const operatorTalents = operator.talents.map(t => t.name);
@@ -157,7 +157,7 @@ export function renderGuidanceStones(
   
   return `
     <div class="guidance-stones-panel">
-      <div class="guidance-stones-title">引导石 (阶段2+可用)</div>
+      <div class="guidance-stones-title">引导石 (加14点后可用)</div>
       <div class="guidance-stones-list">
         ${stones.map(stone => {
           // 判断该引导石是否适用当前干员
@@ -170,8 +170,8 @@ export function renderGuidanceStones(
             (['攻', '防', '辅'].includes(stone.type) && combatSelected && combatSelected.type !== stone.type) ||
             (['生理', '心理'].includes(stone.type) && natureSelected && natureSelected.type !== stone.type);
           
-          // 最终禁用状态
-          const isDisabled = isStage1 || !hasMatchingTalent || isMutuallyExcluded || stone.count === 0;
+          // 最终禁用状态（未加14点前不能使用）
+          const isDisabled = !canUseStones || !hasMatchingTalent || isMutuallyExcluded || stone.count === 0;
           
           return `
             <label class="guidance-stone-item ${isDisabled ? 'disabled' : ''} ${stone.selected ? 'selected' : ''}" 
@@ -202,9 +202,6 @@ export function renderUpgradePanel(
   const totalAdded = getTotalAddedPoints(operator);
   const stage = getStageByLevel(operator.currentLevel);
   
-  // 计算当前阶段
-  const currentStage = stage.totalPoints === 14 ? 1 : stage.totalPoints === 28 ? 2 : stage.totalPoints === 42 ? 3 : 0;
-  
   let statusText = '';
   if (stage.totalPoints === 0) {
     statusText = '需精二30级解锁养成';
@@ -225,7 +222,7 @@ export function renderUpgradePanel(
       </button>
       <button class="btn-reset" id="btn-reset">🔄 一键清零</button>
     </div>
-    ${renderGuidanceStones(stones, operator, currentStage)}
+    ${renderGuidanceStones(stones, operator, totalAdded)}
   `;
 }
 

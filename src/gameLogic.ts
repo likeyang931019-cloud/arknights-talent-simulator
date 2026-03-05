@@ -64,12 +64,11 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
     return { success: false, message: '当前阶段已加满，请提升等级' };
   }
 
-  // 获取当前阶段
-  const stage = getStageByLevel(operator.currentLevel);
-  const currentStage = stage.totalPoints === 14 ? 1 : stage.totalPoints === 28 ? 2 : 3;
+  // 获取当前阶段和已加点数
+  const totalAdded = getTotalAddedPoints(operator);
   
-  // 获取所有选中的引导石（阶段1不能使用）
-  const selectedStones = currentStage > 1 
+  // 获取所有选中的引导石（必须已加14点后才可使用）
+  const selectedStones = totalAdded >= 14 
     ? state.guidanceStones.filter(s => s.selected && s.count > 0)
     : [];
 
