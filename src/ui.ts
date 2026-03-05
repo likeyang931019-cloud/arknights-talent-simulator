@@ -1,6 +1,6 @@
 // 明日方舟天赋养成模拟器 - UI组件
 import type { Operator, TalentConfig, GameState } from './types';
-import { getTotalAddedPoints, getRemainingPointsInStage, getCostPerUpgrade, getCurrentStagePoints } from './gameLogic';
+import { getTotalAddedPoints, getRemainingPointsInStage, getCostPerUpgrade, getCurrentStagePoints, calculateTalentWeight } from './gameLogic';
 import { getStageByLevel } from './types';
 
 // 飘字动画状态
@@ -25,11 +25,14 @@ export function renderTalentBar(talent: TalentConfig, isUpgraded: boolean, maxTo
   const currentPercentage = (talent.currentMax / talent.totalMax) * 100;
   // 进度条总长度按总上限比例缩放
   const barWidthPercentage = (talent.totalMax / maxTotalMax) * 100;
+  // 计算权重并四舍五入取整
+  const weight = Math.round(calculateTalentWeight(talent));
   
   return `
     <div class="talent-bar-container" data-talent="${talent.name}">
       <div class="talent-header">
         <span class="talent-name">${talent.name}</span>
+        <span class="talent-weight" title="随机权重">权重:${weight}</span>
         <span class="talent-values">
           <span class="current-value ${isUpgraded ? 'upgraded' : ''}">${talent.current}</span>
           <span class="separator">/</span>
