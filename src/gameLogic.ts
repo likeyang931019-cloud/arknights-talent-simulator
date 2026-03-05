@@ -33,15 +33,15 @@ export function getCostPerUpgrade(operator: Operator): number {
 }
 
 // 计算属性权重（新公式）
-// Wi = (1 / (当前值 + 1)^n) × (当前阶段上限 - 当前值)
+// Wi = (1 / (当前值 + 1)^n) × (当前阶段上限 - 当前值) × 100
 export function calculateTalentWeight(talent: TalentConfig, n: number): number {
   if (talent.current >= talent.currentMax) return 0;
   // (当前值 + 1)的n次方
   const denominator = Math.pow(talent.current + 1, n);
   // 当前阶段上限 - 当前值
   const remainingSpace = talent.currentMax - talent.current;
-  // 计算权重
-  return (1 / denominator) * remainingSpace;
+  // 计算权重并乘以100
+  return (1 / denominator) * remainingSpace * 100;
 }
 
 // 加权随机选择一个属性
