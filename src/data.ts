@@ -10,12 +10,12 @@ const AMIYA_TALENT_TOTALS: Record<string, number> = {
   '智慧': 15,
 };
 
-// 星熊的天赋配置（总上限：勇气9、体魄15、毅力12、感知6）
+// 星熊的天赋配置（总上限：勇气9、体魄12、毅力12、感知9）
 const HOSHIGUMA_TALENT_TOTALS: Record<string, number> = {
   '勇气': 9,
-  '体魄': 15,
+  '体魄': 12,
   '毅力': 12,
-  '感知': 6,
+  '感知': 9,
 };
 
 // 创建干员天赋配置
