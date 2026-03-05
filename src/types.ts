@@ -44,25 +44,50 @@ export interface UpgradeResult {
 }
 
 // 等级阶段定义
+// 1-29级：未解锁（不能加点）
+// 30级：解锁阶段1（最多14点，消耗10）
+// 50级：解锁阶段2（最多28点，消耗20）
+// 70级：解锁阶段3（最多42点，消耗50）
 export const LEVEL_STAGES: StageConfig[] = [
-  { minLevel: 1, maxLevel: 30, totalPoints: 14, costPerPoint: 10 },
-  { minLevel: 31, maxLevel: 50, totalPoints: 28, costPerPoint: 20 },
-  { minLevel: 51, maxLevel: 70, totalPoints: 42, costPerPoint: 50 },
+  { minLevel: 30, maxLevel: 49, totalPoints: 14, costPerPoint: 10 },
+  { minLevel: 50, maxLevel: 69, totalPoints: 28, costPerPoint: 20 },
+  { minLevel: 70, maxLevel: 70, totalPoints: 42, costPerPoint: 50 },
 ];
+
+// 未解锁阶段（1-29级）
+export const LOCKED_STAGE: StageConfig = {
+  minLevel: 1,
+  maxLevel: 29,
+  totalPoints: 0,
+  costPerPoint: 0,
+};
 
 // 根据等级获取当前阶段
 export function getStageByLevel(level: number): StageConfig {
+  // 1-29级未解锁
+  if (level < 30) {
+    return LOCKED_STAGE;
+  }
+  
   for (const stage of LEVEL_STAGES) {
     if (level >= stage.minLevel && level <= stage.maxLevel) {
       return stage;
     }
   }
-  return LEVEL_STAGES[0];
+  
+  // 70级以上按满级处理
+  return LEVEL_STAGES[LEVEL_STAGES.length - 1];
 }
 
 // 计算属性当前上限
 export function calculateCurrentMax(totalMax: number, level: number): number {
   const stage = getStageByLevel(level);
+  
+  // 未解锁阶段，当前上限为0
+  if (stage.totalPoints === 0) {
+    return 0;
+  }
+  
   const ratio = stage.totalPoints / 42; // 42是总点数
   // 确保是整数，且不超过总上限
   return Math.min(Math.round(totalMax * ratio), totalMax);

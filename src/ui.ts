@@ -56,6 +56,10 @@ export function renderOperatorCard(operator: Operator, isSelected: boolean): str
   const stage = getStageByLevel(operator.currentLevel);
   const stagePoints = getCurrentStagePoints(operator);
   
+  const stageBadge = stage.totalPoints === 0 
+    ? '<span class="stage-badge locked">未解锁</span>'
+    : `<span class="stage-badge">阶段${stage.totalPoints === 14 ? '1' : stage.totalPoints === 28 ? '2' : '3'}</span>`;
+  
   return `
     <div class="operator-card ${isSelected ? 'selected' : ''}" data-operator-id="${operator.id}">
       <div class="operator-avatar">${operator.avatar}</div>
@@ -63,7 +67,7 @@ export function renderOperatorCard(operator: Operator, isSelected: boolean): str
         <div class="operator-name">${operator.name}</div>
         <div class="operator-progress">
           <span class="progress-text">${totalAdded}/42</span>
-          <span class="stage-badge">阶段${stage.totalPoints === 14 ? '1' : stage.totalPoints === 28 ? '2' : '3'}</span>
+          ${stageBadge}
         </div>
       </div>
     </div>
@@ -107,8 +111,15 @@ export function renderLevelControl(level: number): string {
 
 function getStageInfo(level: number): string {
   const stage = getStageByLevel(level);
+  
+  // 未解锁阶段
+  if (stage.totalPoints === 0) {
+    return '未解锁 (需精二30级)';
+  }
+  
   const stageNum = stage.totalPoints === 14 ? 1 : stage.totalPoints === 28 ? 2 : 3;
-  return `阶段${stageNum} (可加点至${stage.totalPoints}点)`;
+  const nextUnlock = stage.totalPoints === 14 ? '50' : stage.totalPoints === 28 ? '70' : '已满';
+  return `阶段${stageNum} (可加点至${stage.totalPoints}点${nextUnlock !== '已满' ? `, 下档${nextUnlock}级` : ''})`;
 }
 
 // 渲染养成控制面板
@@ -116,9 +127,12 @@ export function renderUpgradePanel(operator: Operator, canUpgrade: boolean): str
   const cost = getCostPerUpgrade(operator);
   const remaining = getRemainingPointsInStage(operator);
   const totalAdded = getTotalAddedPoints(operator);
+  const stage = getStageByLevel(operator.currentLevel);
   
   let statusText = '';
-  if (totalAdded >= 42) {
+  if (stage.totalPoints === 0) {
+    statusText = '需精二30级解锁养成';
+  } else if (totalAdded >= 42) {
     statusText = '已满级';
   } else if (remaining <= 0) {
     statusText = '请提升等级';

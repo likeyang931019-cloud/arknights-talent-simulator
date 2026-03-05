@@ -206,6 +206,10 @@ body {
   font-size: 0.75rem;
 }
 
+.stage-badge.locked {
+  background: var(--text-muted);
+}
+
 .operator-detail {
   background: var(--bg-card);
   border-radius: 12px;
