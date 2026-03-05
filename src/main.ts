@@ -1,4 +1,21 @@
-// 明日方舟天赋养成模拟器 - 主程序
+/*
+ * ========================================================================
+ * 明日方舟天赋养成模拟器 - 主程序
+ * 
+ * 【版本标记 v1.0 - 基础版本完成】
+ * 日期: 2024
+ * 功能: 完整的九属性养成系统原型
+ * 
+ * 特性:
+ * - 阿米娅/星熊两名干员数据
+ * - 30/50/70级三阶段解锁机制
+ * - 加权随机加点算法 (参数n可调)
+ * - 资源管理与手动输入
+ * 
+ * 如需回退，请回到此版本
+ * ========================================================================
+ */
+
 import type { GameState, Operator } from './types';
 import { createInitialOperators, updateOperatorLevel, resetOperator } from './data';
 import { upgradeTalent, applyUpgrade, getTotalAddedPoints, getRemainingPointsInStage, getCostPerUpgrade } from './gameLogic';
