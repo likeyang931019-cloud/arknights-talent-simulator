@@ -307,9 +307,9 @@ function renderOperatorDetail(
         <h3>天赋属性</h3>
         <div class="talents-list">
           ${operator.talents.map(t => {
-            // 判断是否被引导石高亮
+            // 判断是否被引导石高亮（交集：必须同时符合所有选中的引导石）
             const isHighlighted = selectedStoneTypes.length === 0 || 
-              selectedStoneTypes.some(stoneType => isTalentMatchGuidanceStone(t.name, stoneType));
+              selectedStoneTypes.every(stoneType => isTalentMatchGuidanceStone(t.name, stoneType));
             return renderTalentBar(t, t.name === lastUpgradedTalent, maxTotalMax, n, isHighlighted);
           }).join('')}
         </div>
