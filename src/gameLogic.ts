@@ -68,22 +68,19 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
   const stage = getStageByLevel(operator.currentLevel);
   const currentStage = stage.totalPoints === 14 ? 1 : stage.totalPoints === 28 ? 2 : 3;
   
-  // 获取选中的引导石（阶段1不能使用）
-  const selectedStone = currentStage > 1 
-    ? state.guidanceStones.find(s => s.selected && s.count > 0)
-    : undefined;
+  // 获取所有选中的引导石（阶段1不能使用）
+  const selectedStones = currentStage > 1 
+    ? state.guidanceStones.filter(s => s.selected && s.count > 0)
+    : [];
 
   // 筛选可升级的属性
   let upgradableTalents = operator.talents.filter(t => t.current < t.currentMax);
   
-  // 如果有引导石，进一步筛选
-  if (selectedStone) {
+  // 如果有引导石，取交集筛选（属性必须同时符合所有选中的引导石）
+  if (selectedStones.length > 0) {
     upgradableTalents = upgradableTalents.filter(t => 
-      isTalentMatchGuidanceStone(t.name, selectedStone.type)
+      selectedStones.every(stone => isTalentMatchGuidanceStone(t.name, stone.type))
     );
-    if (upgradableTalents.length === 0) {
-      return { success: false, message: '没有符合引导石条件的属性可升级' };
-    }
   }
 
   if (upgradableTalents.length === 0) {
@@ -125,7 +122,7 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
     upgradedTalent: selectedTalent.name,
     cost,
     message: `${selectedTalent.name} +1`,
-    consumedStone: selectedStone?.type,
+    consumedStone: selectedStones.length > 0 ? selectedStones[0].type : undefined,
   };
 }
 
@@ -151,11 +148,11 @@ export function applyUpgrade(
         }),
       };
     }),
-    // 消耗引导石
+    // 消耗引导石（数量归0时才取消勾选）
     guidanceStones: result.consumedStone 
       ? state.guidanceStones.map(s => 
           s.type === result.consumedStone 
-            ? { ...s, count: s.count - 1, selected: false }
+            ? { ...s, count: s.count - 1, selected: s.count > 1 }
             : s
         )
       : state.guidanceStones,

@@ -267,14 +267,29 @@ function renderOperatorDetail(
   guidanceStones: GuidanceStone[]
 ): string {
   const cost = getCostPerUpgrade(operator);
-  const canUpgrade = talentPoints >= cost && getRemainingPointsInStage(operator) > 0;
+  const remaining = getRemainingPointsInStage(operator);
+  
+  // 获取所有选中的引导石
+  const selectedStones = guidanceStones.filter(s => s.selected && s.count > 0);
+  
+  // 检查是否有符合引导石交集条件的属性
+  let hasMatchingTalentForStones = true;
+  if (selectedStones.length > 0) {
+    const upgradableTalents = operator.talents.filter(t => t.current < t.currentMax);
+    const matchingTalents = upgradableTalents.filter(t => 
+      selectedStones.every(stone => isTalentMatchGuidanceStone(t.name, stone.type))
+    );
+    hasMatchingTalentForStones = matchingTalents.length > 0;
+  }
+  
+  // 只有天赋点足够、有剩余点数、且有符合引导石条件的属性时才能加点
+  const canUpgrade = talentPoints >= cost && remaining > 0 && hasMatchingTalentForStones;
+  
   // 计算该干员中最大的总上限，用于进度条比例
   const maxTotalMax = Math.max(...operator.talents.map(t => t.totalMax));
   
-  // 获取当前选中的引导石类型
-  const selectedStoneTypes = guidanceStones
-    .filter(s => s.selected && !s.disabled)
-    .map(s => s.type);
+  // 获取当前选中的引导石类型（用于高亮显示）
+  const selectedStoneTypes = selectedStones.map(s => s.type);
   
   return `
     <div class="detail-card">
