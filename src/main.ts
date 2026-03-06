@@ -31,7 +31,7 @@ const initialState: GameState = {
   weightParamN: 0.3,
   guidanceStones: createInitialGuidanceStones(),
   critEnabled: true,
-  critRate: 0.2,  // 默认20%
+  critRate: 0.15,  // 默认15%
   critStones: createInitialCritStones(),
   nextCritGuaranteed: false,
 };
@@ -358,15 +358,8 @@ function handleReset(): void {
     return;
   }
 
-  // 返还天赋点（返还比例可以根据需求调整，这里全额返还）
-  let refundedPoints = 0;
-  if (totalAdded <= 14) {
-    refundedPoints = totalAdded * 10;
-  } else if (totalAdded <= 28) {
-    refundedPoints = 14 * 10 + (totalAdded - 14) * 20;
-  } else {
-    refundedPoints = 14 * 10 + 14 * 20 + (totalAdded - 28) * 50;
-  }
+  // 返还实际消耗的天赋点（按实际每次加点消耗累加）
+  const refundedPoints = operator.totalSpent;
 
   const updatedOperators = state.operators.map(op => {
     if (op.id !== state.selectedOperator) return op;

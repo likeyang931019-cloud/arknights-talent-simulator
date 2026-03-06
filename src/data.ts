@@ -39,6 +39,7 @@ export function createInitialOperators(): Operator[] {
       avatar: '🐰',
       talents: createTalents(AMIYA_TALENT_TOTALS, initialLevel),
       currentLevel: initialLevel,
+      totalSpent: 0,
     },
     {
       id: 'hoshiguma',
@@ -46,6 +47,7 @@ export function createInitialOperators(): Operator[] {
       avatar: '🛡️',
       talents: createTalents(HOSHIGUMA_TALENT_TOTALS, initialLevel),
       currentLevel: initialLevel,
+      totalSpent: 0,
     },
   ];
 }
@@ -72,5 +74,6 @@ export function resetOperator(operator: Operator): Operator {
       ...talent,
       current: 0,
     })),
+    totalSpent: 0,
   };
 }

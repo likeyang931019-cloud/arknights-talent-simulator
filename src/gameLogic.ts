@@ -58,10 +58,10 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
     return { success: false, message: '天赋点不足' };
   }
 
-  // 检查是否还有剩余点数可加
-  const remaining = getRemainingPointsInStage(operator);
-  if (remaining <= 0) {
-    return { success: false, message: '当前阶段已加满，请提升等级' };
+  // 检查是否还有属性未达上限（等级只影响上限，不影响可加多少点）
+  const hasUpgradableTalent = operator.talents.some(t => t.current < t.totalMax);
+  if (!hasUpgradableTalent) {
+    return { success: false, message: '所有属性已达总上限' };
   }
 
   // 获取当前阶段和已加点数
@@ -180,6 +180,7 @@ export function applyUpgrade(
           if (t.name !== result.upgradedTalent) return t;
           return { ...t, current: Math.min(t.current + addedPoints, t.totalMax) };
         }),
+        totalSpent: o.totalSpent + (result.cost || 0),  // 累加实际消耗
       };
     }),
     // 消耗引导石（数量归0时才取消勾选）

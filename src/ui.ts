@@ -193,15 +193,16 @@ function getStageInfo(level: number): string {
 // 渲染暴击石（方案A：单独面板）
 export function renderCritStones(
   critStones: CritStone[],
-  totalAdded: number
+  totalAdded: number,
+  critEnabled: boolean
 ): string {
   return `
-    <div class="crit-stones-panel">
-      <div class="crit-stones-title">⚡ 暴击石</div>
+    <div class="crit-stones-panel ${!critEnabled ? 'disabled' : ''}">
+      <div class="crit-stones-title">⚡ 暴击石 ${!critEnabled ? '(暴击已关闭)' : ''}</div>
       <div class="crit-stones-list">
         ${critStones.map(stone => {
-          // 检查是否可用
-          const isAvailable = totalAdded >= stone.minPoints && totalAdded <= stone.maxPoints;
+          // 检查是否可用（需要暴击开启）
+          const isAvailable = critEnabled && totalAdded >= stone.minPoints && totalAdded <= stone.maxPoints;
           const isDisabled = !isAvailable || stone.count === 0;
           
           return `
@@ -282,6 +283,7 @@ export function renderUpgradePanel(
   canUpgrade: boolean, 
   stones: GuidanceStone[],
   critStones: CritStone[],
+  critEnabled: boolean,
   n: number
 ): string {
   const cost = getCostPerUpgrade(operator);
@@ -311,7 +313,7 @@ export function renderUpgradePanel(
     </div>
     <div class="stones-container">
       ${renderGuidanceStones(stones, operator, totalAdded)}
-      ${renderCritStones(critStones, totalAdded)}
+      ${renderCritStones(critStones, totalAdded, critEnabled)}
     </div>
   `;
 }
@@ -338,7 +340,7 @@ export function renderApp(state: GameState, lastUpgradedTalent: string | null, l
         </aside>
         
         <main class="operator-detail">
-          ${selectedOperator ? renderOperatorDetail(selectedOperator, state.talentPoints, lastUpgradedTalent, lastIsCrit, lastAddedPoints, state.weightParamN, state.guidanceStones, state.critStones) : renderEmptyState()}
+          ${selectedOperator ? renderOperatorDetail(selectedOperator, state.talentPoints, lastUpgradedTalent, lastIsCrit, lastAddedPoints, state.weightParamN, state.guidanceStones, state.critStones, state.critEnabled) : renderEmptyState()}
         </main>
       </div>
     </div>
@@ -354,7 +356,8 @@ function renderOperatorDetail(
   lastAddedPoints: number,
   n: number,
   guidanceStones: GuidanceStone[],
-  critStones: CritStone[]
+  critStones: CritStone[],
+  critEnabled: boolean
 ): string {
   const cost = getCostPerUpgrade(operator);
   const remaining = getRemainingPointsInStage(operator);
@@ -403,12 +406,12 @@ function renderOperatorDetail(
             // 判断是否被引导石高亮（交集：必须同时符合所有选中的引导石）
             const isHighlighted = selectedStoneTypes.length === 0 || 
               selectedStoneTypes.every(stoneType => isTalentMatchGuidanceStone(t.name, stoneType));
-            return renderTalentBar(t, t.name === lastUpgradedTalent, lastIsCrit, lastAddedPoints, maxTotalMax, n, isHighlighted);
+            return renderTalentBar(t, t.name === lastUpgradedTalent, t.name === lastUpgradedTalent && lastIsCrit, lastAddedPoints, maxTotalMax, n, isHighlighted);
           }).join('')}
         </div>
       </div>
       
-      ${renderUpgradePanel(operator, canUpgrade, guidanceStones, critStones, n)}
+      ${renderUpgradePanel(operator, canUpgrade, guidanceStones, critStones, critEnabled, n)}
     </div>
   `;
 }

@@ -26,6 +26,7 @@ export interface Operator {
   avatar: string;
   talents: TalentConfig[];
   currentLevel: number;  // 当前精二等级 (1-70)
+  totalSpent: number;  // 已消耗的天赋点总数（用于一键清零返还）
 }
 
 // 游戏状态
