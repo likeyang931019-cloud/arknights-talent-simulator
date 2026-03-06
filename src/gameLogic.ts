@@ -67,10 +67,22 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
   // 获取当前阶段和已加点数
   const totalAdded = getTotalAddedPoints(operator);
   
+  // 计算引导石消耗倍数：14-27点1倍，28点以上2倍
+  const stoneCostMultiplier = totalAdded >= 28 ? 2 : 1;
+  
   // 获取所有选中的引导石（必须已加14点后才可使用）
   const selectedStones = totalAdded >= 14 
     ? state.guidanceStones.filter(s => s.selected && s.count > 0)
     : [];
+  
+  // 检查引导石数量是否足够（28点以上需要每种2个）
+  if (selectedStones.length > 0) {
+    const insufficientStones = selectedStones.filter(s => s.count < stoneCostMultiplier);
+    if (insufficientStones.length > 0) {
+      const stoneNames = insufficientStones.map(s => s.name).join('、');
+      return { success: false, message: `${stoneNames} 数量不足（需要${stoneCostMultiplier}个）` };
+    }
+  }
 
   // 获取选中的暴击石
   const selectedCritStone = state.critStones.find(s => s.selected && s.count > 0);
@@ -157,7 +169,8 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
     upgradedTalent: selectedTalent.name,
     cost,
     message: `${critText}${selectedTalent.name} ${pointsText}`,
-    consumedStone: selectedStones.length > 0 ? selectedStones[0].type : undefined,
+    consumedStones: selectedStones.length > 0 ? selectedStones.map(s => s.type) : undefined,
+    stoneCostMultiplier,
     consumedCritStone: consumedCritStoneType,
     isCrit,
     addedPoints,
@@ -173,6 +186,7 @@ export function applyUpgrade(
   if (!result.success || !result.cost) return state;
 
   const addedPoints = result.addedPoints || 1;
+  const stoneCostMultiplier = result.stoneCostMultiplier || 1;
 
   return {
     ...state,
@@ -192,13 +206,13 @@ export function applyUpgrade(
         totalSpent: o.totalSpent + (result.cost || 0),  // 累加实际消耗
       };
     }),
-    // 消耗引导石（数量归0时才取消勾选）
-    guidanceStones: result.consumedStone 
-      ? state.guidanceStones.map(s => 
-          s.type === result.consumedStone 
-            ? { ...s, count: s.count - 1, selected: s.count > 1 }
-            : s
-        )
+    // 消耗引导石（支持多倍消耗）
+    guidanceStones: result.consumedStones && result.consumedStones.length > 0
+      ? state.guidanceStones.map(s => {
+          if (!result.consumedStones!.includes(s.type)) return s;
+          const newCount = s.count - stoneCostMultiplier;
+          return { ...s, count: newCount, selected: newCount > 0 };
+        })
       : state.guidanceStones,
     // 消耗暴击石（数量归0时才取消勾选）
     critStones: result.consumedCritStone

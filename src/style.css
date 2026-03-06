@@ -651,6 +651,17 @@ body {
   background: var(--bg-dark);
 }
 
+/* 引导石数量不足提示 */
+.guidance-stone-item.insufficient {
+  opacity: 0.6;
+  border: 1px solid #e84118;
+}
+
+.guidance-stone-item.insufficient .stone-count {
+  color: #e84118;
+  font-weight: bold;
+}
+
 .stone-checkbox {
   width: 16px;
   height: 16px;

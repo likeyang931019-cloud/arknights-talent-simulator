@@ -270,6 +270,9 @@ export function renderGuidanceStones(
   // 必须已加14点后才可使用引导石
   const canUseStones = totalAdded >= 14;
   
+  // 计算引导石消耗倍数：14-27点1倍，28点以上2倍
+  const stoneCostMultiplier = totalAdded >= 28 ? 2 : 1;
+  
   // 检查干员拥有的属性类型
   const operatorTalents = operator.talents.map(t => t.name);
   const hasCombatType = (type: '攻' | '防' | '辅') => 
@@ -281,9 +284,12 @@ export function renderGuidanceStones(
   const combatSelected = stones.find(s => ['攻', '防', '辅'].includes(s.type) && s.selected);
   const natureSelected = stones.find(s => ['生理', '心理'].includes(s.type) && s.selected);
   
+  // 消耗倍数显示文本
+  const costText = stoneCostMultiplier > 1 ? `（消耗×${stoneCostMultiplier}）` : '';
+  
   return `
     <div class="guidance-stones-panel">
-      <div class="guidance-stones-title">引导石 (加14点后可用)</div>
+      <div class="guidance-stones-title">引导石 (加14点后可用)${costText}</div>
       <div class="guidance-stones-list">
         ${stones.map(stone => {
           // 判断该引导石是否适用当前干员
@@ -296,18 +302,24 @@ export function renderGuidanceStones(
             (['攻', '防', '辅'].includes(stone.type) && combatSelected && combatSelected.type !== stone.type) ||
             (['生理', '心理'].includes(stone.type) && natureSelected && natureSelected.type !== stone.type);
           
-          // 最终禁用状态（未加14点前不能使用）
-          const isDisabled = !canUseStones || !hasMatchingTalent || isMutuallyExcluded || stone.count === 0;
+          // 检查数量是否足够（28点以上需要2个）
+          const hasEnoughCount = stone.count >= stoneCostMultiplier;
+          
+          // 最终禁用状态（未加14点前不能使用，或数量不足）
+          const isDisabled = !canUseStones || !hasMatchingTalent || isMutuallyExcluded || !hasEnoughCount;
+          
+          // 如果选中，显示消耗数量
+          const costDisplay = stone.selected ? `-${stoneCostMultiplier}` : '';
           
           return `
-            <label class="guidance-stone-item ${isDisabled ? 'disabled' : ''} ${stone.selected ? 'selected' : ''}" 
+            <label class="guidance-stone-item ${isDisabled ? 'disabled' : ''} ${stone.selected ? 'selected' : ''} ${!hasEnoughCount ? 'insufficient' : ''}" 
                    data-stone-type="${stone.type}">
               <input type="checkbox" class="stone-checkbox" 
                      data-stone-type="${stone.type}"
                      ${stone.selected ? 'checked' : ''} 
                      ${isDisabled ? 'disabled' : ''}>
               <span class="stone-name">${stone.name}</span>
-              <span class="stone-count">×${stone.count}</span>
+              <span class="stone-count">×${stone.count}${costDisplay}</span>
             </label>
           `;
         }).join('')}

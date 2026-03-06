@@ -50,6 +50,8 @@ export interface UpgradeResult {
   message: string;
   isCrit?: boolean;  // 是否触发暴击
   addedPoints?: number;  // 实际增加的点数
+  consumedStones?: GuidanceStoneType[];  // 消耗的引导石类型列表
+  stoneCostMultiplier?: number;  // 引导石消耗倍数
 }
 
 // 等级阶段定义
