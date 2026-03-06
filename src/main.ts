@@ -51,7 +51,6 @@ function initApp(): void {
   }
 
   render();
-  attachEventListeners();
 }
 
 // 渲染应用
