@@ -35,6 +35,10 @@ export interface GameState {
   operators: Operator[];
   weightParamN: number;  // 权重计算参数n，默认0.3
   guidanceStones: GuidanceStone[];  // 5种引导石
+  critEnabled: boolean;  // 暴击开关，默认true
+  critRate: number;  // 暴击概率X，默认20%（0.2）
+  critStones: CritStone[];  // 暴击石
+  nextCritGuaranteed: boolean;  // 下次是否必定暴击（使用暴击石后）
 }
 
 // 加点结果
@@ -43,6 +47,8 @@ export interface UpgradeResult {
   upgradedTalent?: TalentType;
   cost?: number;
   message: string;
+  isCrit?: boolean;  // 是否触发暴击
+  addedPoints?: number;  // 实际增加的点数
 }
 
 // 等级阶段定义
@@ -162,4 +168,29 @@ export function isTalentMatchGuidanceStone(
     return TALENT_COMBAT_TYPE[talentName] === stoneType;
   }
   return TALENT_NATURE_TYPE[talentName] === stoneType;
+}
+
+// ==================== 暴击石系统 ====================
+export type CritStoneType = '初级' | '高级';
+
+export interface CritStone {
+  type: CritStoneType;
+  name: string;
+  count: number;
+  selected: boolean;
+  minPoints: number;  // 最低总加点数要求（初级14，高级28）
+  maxPoints: number;  // 最高总加点数限制（初级27，高级无限制用999）
+}
+
+// 创建初始暴击石
+export function createInitialCritStones(): CritStone[] {
+  return [
+    { type: '初级', name: '初级暴击石', count: 5, selected: false, minPoints: 14, maxPoints: 27 },
+    { type: '高级', name: '高级暴击石', count: 5, selected: false, minPoints: 28, maxPoints: 999 },
+  ];
+}
+
+// 检查暴击石是否可用
+export function isCritStoneAvailable(stone: CritStone, totalAdded: number): boolean {
+  return totalAdded >= stone.minPoints && totalAdded <= stone.maxPoints && stone.count > 0;
 }

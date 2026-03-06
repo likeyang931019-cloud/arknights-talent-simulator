@@ -780,6 +780,65 @@ body {
   animation: segmentPulse 0.5s ease;
 }
 
+/* 暴击时格子样式 - 橙色 */
+.talent-segment.filled.crit-upgraded {
+  background: linear-gradient(180deg, #ff9800, #f57c00);
+  box-shadow: 0 0 12px rgba(255, 152, 0, 0.8);
+  animation: critPulse 0.6s ease;
+}
+
+@keyframes critPulse {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(1.05); }
+  75% { transform: scale(1.08); }
+}
+
+/* 暴击飘字 - 橙色 */
+.floating-text.crit {
+  color: #ff9800;
+  font-size: 1.3rem;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 152, 0, 0.8);
+  animation: critFloat 0.8s ease forwards;
+}
+
+@keyframes critFloat {
+  0% { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+  50% {
+    transform: translateY(-15px) scale(1.2);
+  }
+  100% { 
+    opacity: 0; 
+    transform: translateY(-30px) scale(1); 
+  }
+}
+
+/* 暴击时数值显示 */
+.talent-values .current-value.crit {
+  color: #ff9800;
+  text-shadow: 0 0 8px rgba(255, 152, 0, 0.6);
+  animation: critValueFlash 0.5s ease;
+}
+
+@keyframes critValueFlash {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); color: #ffc107; }
+}
+
+/* 暴击时进度条容器闪烁效果 */
+.talent-bar-container.crit-upgrade {
+  animation: critContainerFlash 0.6s ease;
+}
+
+@keyframes critContainerFlash {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 152, 0, 0); }
+  50% { box-shadow: 0 0 20px rgba(255, 152, 0, 0.4); }
+}
+
 @keyframes segmentPulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
@@ -788,4 +847,189 @@ body {
 /* 分段式进度条上的飘字 */
 .talent-progress-wrapper.segmented .floating-text {
   right: -30px;
+}
+
+/* ==================== 暴击开关样式 ==================== */
+.resource-params {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.crit-control {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: var(--bg-light);
+  padding: 8px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.crit-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.crit-toggle input {
+  display: none;
+}
+
+.crit-toggle-slider {
+  width: 44px;
+  height: 24px;
+  background: var(--bg-dark);
+  border-radius: 12px;
+  position: relative;
+  transition: background 0.3s;
+}
+
+.crit-toggle-slider::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+
+.crit-toggle input:checked + .crit-toggle-slider {
+  background: #ff9800;
+}
+
+.crit-toggle input:checked + .crit-toggle-slider::after {
+  transform: translateX(20px);
+}
+
+.crit-toggle-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: bold;
+}
+
+.crit-rate-control {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.crit-rate-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.crit-rate-input {
+  width: 50px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ff9800;
+  background: var(--bg-dark);
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 6px;
+  text-align: center;
+  transition: border-color 0.3s;
+}
+
+.crit-rate-input:focus {
+  outline: none;
+  border-color: #ff9800;
+}
+
+.crit-rate-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.crit-rate-unit {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ==================== 暴击石面板样式 ==================== */
+.stones-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.crit-stones-panel {
+  background: var(--bg-card);
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid var(--border-color);
+}
+
+.crit-stones-title {
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #ff9800;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.crit-stones-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.crit-stone-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg-light);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.crit-stone-item:hover:not(.disabled) {
+  background: #3d4654;
+  border-color: #ff9800;
+}
+
+.crit-stone-item.selected {
+  background: rgba(255, 152, 0, 0.2);
+  border-color: #ff9800;
+  box-shadow: 0 0 10px rgba(255, 152, 0, 0.3);
+}
+
+.crit-stone-item.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.crit-stone-item input {
+  display: none;
+}
+
+.crit-stone-item .stone-icon {
+  font-size: 1rem;
+}
+
+.crit-stone-item .stone-name {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.crit-stone-item .stone-count {
+  font-size: 0.8rem;
+  color: #ff9800;
+  font-weight: bold;
+}
+
+.crit-stone-item .stone-range {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 4px;
 }

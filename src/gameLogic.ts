@@ -1,5 +1,5 @@
 // 明日方舟天赋养成模拟器 - 核心逻辑
-import type { Operator, TalentConfig, UpgradeResult, GameState, GuidanceStoneType } from './types';
+import type { Operator, TalentConfig, UpgradeResult, GameState, GuidanceStoneType, CritStoneType } from './types';
 import { getStageByLevel, isTalentMatchGuidanceStone } from './types';
 
 // 计算干员当前已加的总点数
@@ -44,8 +44,8 @@ export function calculateTalentWeight(talent: TalentConfig, n: number): number {
   return (1 / denominator) * remainingSpace * 100;
 }
 
-// 执行加点（支持引导石）
-export function upgradeTalent(state: GameState, operatorId: string): UpgradeResult & { consumedStone?: GuidanceStoneType } {
+// 执行加点（支持引导石和暴击）
+export function upgradeTalent(state: GameState, operatorId: string): UpgradeResult & { consumedStone?: GuidanceStoneType; consumedCritStone?: CritStoneType } {
   const operator = state.operators.find(o => o.id === operatorId);
   if (!operator) {
     return { success: false, message: '干员不存在' };
@@ -71,6 +71,9 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
   const selectedStones = totalAdded >= 14 
     ? state.guidanceStones.filter(s => s.selected && s.count > 0)
     : [];
+
+  // 获取选中的暴击石
+  const selectedCritStone = state.critStones.find(s => s.selected && s.count > 0);
 
   // 筛选可升级的属性
   let upgradableTalents = operator.talents.filter(t => t.current < t.currentMax);
@@ -116,22 +119,54 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
     return { success: false, message: '没有可升级的属性' };
   }
 
+  // 暴击判定
+  let isCrit = false;
+  let addedPoints = 1;
+  let consumedCritStoneType: CritStoneType | undefined;
+
+  // 检查是否使用暴击石（优先判定）
+  if (selectedCritStone) {
+    isCrit = true;
+    addedPoints = 2;
+    consumedCritStoneType = selectedCritStone.type;
+  } else if (state.critEnabled) {
+    // 随机暴击判定
+    isCrit = Math.random() < state.critRate;
+    addedPoints = isCrit ? 2 : 1;
+  }
+
+  // 检查是否会超出总上限
+  if (selectedTalent.current + addedPoints > selectedTalent.totalMax) {
+    // 超出总上限，只加1点，不触发暴击
+    isCrit = false;
+    addedPoints = 1;
+    consumedCritStoneType = undefined; // 暴击石不消耗
+  }
+
+  const critText = isCrit ? '暴击！' : '';
+  const pointsText = addedPoints === 2 ? '+2' : '+1';
+
   return {
     success: true,
     upgradedTalent: selectedTalent.name,
     cost,
-    message: `${selectedTalent.name} +1`,
+    message: `${critText}${selectedTalent.name} ${pointsText}`,
     consumedStone: selectedStones.length > 0 ? selectedStones[0].type : undefined,
+    consumedCritStone: consumedCritStoneType,
+    isCrit,
+    addedPoints,
   };
 }
 
 // 更新游戏状态（加点后）
 export function applyUpgrade(
   state: GameState, 
-  result: UpgradeResult & { consumedStone?: GuidanceStoneType }, 
+  result: UpgradeResult & { consumedStone?: GuidanceStoneType; consumedCritStone?: CritStoneType }, 
   operatorId: string
 ): GameState {
   if (!result.success || !result.cost) return state;
+
+  const addedPoints = result.addedPoints || 1;
 
   return {
     ...state,
@@ -143,7 +178,7 @@ export function applyUpgrade(
         ...o,
         talents: o.talents.map(t => {
           if (t.name !== result.upgradedTalent) return t;
-          return { ...t, current: t.current + 1 };
+          return { ...t, current: Math.min(t.current + addedPoints, t.totalMax) };
         }),
       };
     }),
@@ -155,5 +190,13 @@ export function applyUpgrade(
             : s
         )
       : state.guidanceStones,
+    // 消耗暴击石（数量归0时才取消勾选）
+    critStones: result.consumedCritStone
+      ? state.critStones.map(s =>
+          s.type === result.consumedCritStone
+            ? { ...s, count: s.count - 1, selected: s.count > 1 }
+            : s
+        )
+      : state.critStones,
   };
 }

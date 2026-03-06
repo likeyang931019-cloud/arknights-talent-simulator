@@ -20,7 +20,7 @@ import type { GameState, Operator } from './types';
 import { createInitialOperators, updateOperatorLevel, resetOperator } from './data';
 import { upgradeTalent, applyUpgrade, getTotalAddedPoints, getRemainingPointsInStage, getCostPerUpgrade } from './gameLogic';
 import { renderApp } from './ui';
-import { createInitialGuidanceStones } from './types';
+import { createInitialGuidanceStones, createInitialCritStones } from './types';
 import './style.css';
 
 // 初始状态
@@ -30,11 +30,17 @@ const initialState: GameState = {
   operators: createInitialOperators(),
   weightParamN: 0.3,
   guidanceStones: createInitialGuidanceStones(),
+  critEnabled: true,
+  critRate: 0.2,  // 默认20%
+  critStones: createInitialCritStones(),
+  nextCritGuaranteed: false,
 };
 
 // 全局状态
 let state: GameState = { ...initialState };
 let lastUpgradedTalent: string | null = null;
+let lastIsCrit: boolean = false;
+let lastAddedPoints: number = 1;
 
 // 初始化应用
 function initApp(): void {
@@ -53,7 +59,7 @@ function render(): void {
   const app = document.getElementById('app');
   if (!app) return;
 
-  app.innerHTML = renderApp(state, lastUpgradedTalent);
+  app.innerHTML = renderApp(state, lastUpgradedTalent, lastIsCrit, lastAddedPoints);
   attachEventListeners();
 }
 
@@ -126,6 +132,35 @@ function attachEventListeners(): void {
       }
     });
   });
+
+  // 暴击开关
+  const critEnabledCheckbox = document.getElementById('crit-enabled') as HTMLInputElement;
+  if (critEnabledCheckbox) {
+    critEnabledCheckbox.addEventListener('change', (e) => {
+      const isChecked = (e.target as HTMLInputElement).checked;
+      setCritEnabled(isChecked);
+    });
+  }
+
+  // 暴击概率输入框
+  const critRateInput = document.getElementById('crit-rate') as HTMLInputElement;
+  if (critRateInput) {
+    critRateInput.addEventListener('change', (e) => {
+      const newValue = parseInt((e.target as HTMLInputElement).value);
+      setCritRate(newValue / 100);  // 转换为小数
+    });
+  }
+
+  // 暴击石复选框
+  document.querySelectorAll('.crit-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+      const critType = (e.currentTarget as HTMLElement).dataset.critType;
+      const isChecked = (e.target as HTMLInputElement).checked;
+      if (critType) {
+        toggleCritStone(critType, isChecked);
+      }
+    });
+  });
 }
 
 // 添加天赋点
@@ -187,9 +222,44 @@ function toggleGuidanceStone(stoneType: string, isSelected: boolean): void {
   render();
 }
 
+// 设置暴击开关
+function setCritEnabled(enabled: boolean): void {
+  state = {
+    ...state,
+    critEnabled: enabled,
+  };
+  render();
+}
+
+// 设置暴击概率
+function setCritRate(rate: number): void {
+  state = {
+    ...state,
+    critRate: Math.max(0, Math.min(1, rate)),
+  };
+  render();
+}
+
+// 切换暴击石选择
+function toggleCritStone(critType: string, isSelected: boolean): void {
+  state = {
+    ...state,
+    critStones: state.critStones.map(stone => {
+      // 暴击石之间互斥，只能选一个
+      if (stone.type === critType) {
+        return { ...stone, selected: isSelected };
+      }
+      return { ...stone, selected: false };
+    }),
+  };
+  render();
+}
+
 // 选择干员
 function selectOperator(operatorId: string): void {
   lastUpgradedTalent = null;
+  lastIsCrit = false;
+  lastAddedPoints = 1;
   state = {
     ...state,
     selectedOperator: operatorId,
@@ -253,17 +323,22 @@ function handleUpgrade(): void {
   
   if (result.success && result.upgradedTalent) {
     lastUpgradedTalent = result.upgradedTalent;
+    lastIsCrit = result.isCrit || false;
+    lastAddedPoints = result.addedPoints || 1;
     state = applyUpgrade(state, result, state.selectedOperator);
     
     updateResourceDisplay();
     render();
     
     const stoneMsg = result.consumedStone ? ` (消耗引导石-${result.consumedStone})` : '';
-    showToast(`${operator.name} 的 ${result.upgradedTalent} 提升了！${stoneMsg}`, 'success');
+    const critMsg = result.isCrit ? ' 暴击！' : '';
+    showToast(`${operator.name} 的 ${result.upgradedTalent} 提升了${critMsg}！${stoneMsg}`, 'success');
     
     // 清除飘字动画状态
     setTimeout(() => {
       lastUpgradedTalent = null;
+      lastIsCrit = false;
+      lastAddedPoints = 1;
     }, 1000);
   } else {
     showToast(result.message, 'error');
@@ -305,10 +380,12 @@ function handleReset(): void {
     operators: updatedOperators,
     // 一键清零后引导石回退到初始状态（每种10个）
     guidanceStones: createInitialGuidanceStones(),
+    // 一键清零后暴击石回退到初始状态（每种5个）
+    critStones: createInitialCritStones(),
   };
 
   render();
-  showToast(`已重置养成进度，返还 ${refundedPoints} 天赋点，引导石已回退`, 'success');
+  showToast(`已重置养成进度，返还 ${refundedPoints} 天赋点，引导石和暴击石已回退`, 'success');
 }
 
 // 更新资源显示

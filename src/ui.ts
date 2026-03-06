@@ -1,5 +1,5 @@
 // 明日方舟天赋养成模拟器 - UI组件
-import type { Operator, TalentConfig, GameState, GuidanceStone, TalentType } from './types';
+import type { Operator, TalentConfig, GameState, GuidanceStone, TalentType, CritStone } from './types';
 import { TALENT_COMBAT_TYPE, TALENT_NATURE_TYPE, isTalentMatchGuidanceStone, getStageByLevel } from './types';
 import { getTotalAddedPoints, getRemainingPointsInStage, getCostPerUpgrade, getCurrentStagePoints, calculateTalentWeight } from './gameLogic';
 
@@ -23,6 +23,8 @@ export function createFloatingText(text: string, talentName: string): FloatingTe
 export function renderTalentBar(
   talent: TalentConfig, 
   isUpgraded: boolean, 
+  isCrit: boolean,
+  addedPoints: number,
   maxTotalMax: number, 
   n: number,
   isHighlighted: boolean = true
@@ -46,8 +48,21 @@ export function renderTalentBar(
     });
   }
   
+  // 暴击时的飘字内容
+  const floatingText = isUpgraded 
+    ? `<div class="floating-text ${isCrit ? 'crit' : ''}">${isCrit ? '+2' : '+1'}</div>` 
+    : '';
+  
+  // 暴击时，最后addedPoints个格子需要标记
+  const upgradedIndices = new Set<number>();
+  if (isUpgraded && addedPoints > 0) {
+    for (let i = 1; i <= addedPoints; i++) {
+      upgradedIndices.add(talent.current - i);
+    }
+  }
+  
   return `
-    <div class="talent-bar-container ${isHighlighted ? 'highlighted' : 'dimmed'}" data-talent="${talent.name}">
+    <div class="talent-bar-container ${isHighlighted ? 'highlighted' : 'dimmed'} ${isUpgraded && isCrit ? 'crit-upgrade' : ''}" data-talent="${talent.name}">
       <div class="talent-header">
         <span class="talent-name">${talent.name}</span>
         <span class="talent-tags">
@@ -56,7 +71,7 @@ export function renderTalentBar(
         </span>
         <span class="talent-weight" title="随机权重 (n=${n})">权重:${weight}</span>
         <span class="talent-values">
-          <span class="current-value ${isUpgraded ? 'upgraded' : ''}">${talent.current}</span>
+          <span class="current-value ${isUpgraded ? 'upgraded' : ''} ${isCrit ? 'crit' : ''}">${talent.current}</span>
           <span class="separator">/</span>
           <span class="current-max">${talent.currentMax}</span>
           <span class="separator">(</span>
@@ -64,7 +79,7 @@ export function renderTalentBar(
           <span class="separator">)</span>
         </span>
       </div>
-      <div class="talent-progress-wrapper segmented" style="width: ${barWidthPercentage}%">
+      <div class="talent-progress-wrapper segmented ${isUpgraded && isCrit ? 'crit' : ''}" style="width: ${barWidthPercentage}%">
         <div class="talent-segments">
           ${segments.map((seg, idx) => {
             const isLast = idx === segments.length - 1;
@@ -73,14 +88,17 @@ export function renderTalentBar(
             if (seg.isFilled) classes.push('filled');
             else if (seg.isWithinCurrentStage) classes.push('available');
             else if (seg.isBeyondStage) classes.push('locked');
-            if (isUpgraded && seg.isFilled && idx === talent.current - 1) classes.push('upgraded');
+            // 暴击时，最后addedPoints个格子都有特效
+            if (isUpgraded && upgradedIndices.has(idx)) {
+              classes.push(isCrit ? 'crit-upgraded' : 'upgraded');
+            }
             if (isFirst) classes.push('first');
             if (isLast) classes.push('last');
             const statusText = seg.isFilled ? '已获得' : seg.isWithinCurrentStage ? '当前阶段可加点' : '后续阶段解锁';
-            return `<div class="${classes.join(' ')}" title="${idx + 1} - ${statusText}"></div>`;
+            return `<div class="${classes.join(' ')}"></div>`;
           }).join('')}
         </div>
-        ${isUpgraded ? `<div class="floating-text">+1</div>` : ''}
+        ${floatingText}
       </div>
     </div>
   `;
@@ -111,7 +129,7 @@ export function renderOperatorCard(operator: Operator, isSelected: boolean): str
 }
 
 // 渲染资源面板
-export function renderResourcePanel(talentPoints: number, weightParamN: number): string {
+export function renderResourcePanel(talentPoints: number, weightParamN: number, critEnabled: boolean, critRate: number): string {
   return `
     <div class="resource-panel">
       <div class="resource-item">
@@ -119,10 +137,24 @@ export function renderResourcePanel(talentPoints: number, weightParamN: number):
         <span class="resource-name">天赋点</span>
         <input type="number" id="talent-points-input" class="resource-value-input" value="${talentPoints}" min="0" />
       </div>
-      <div class="resource-param">
-        <span class="param-formula" title="权重计算公式">Wi=(1/(v+1)^n)×(max-v)×100</span>
-        <span class="param-label">参数n</span>
-        <input type="number" id="weight-param-n" class="param-input" value="${weightParamN}" min="0" max="10" step="0.1" />
+      <div class="resource-params">
+        <div class="resource-param">
+          <span class="param-formula" title="权重计算公式">Wi=(1/(v+1)^n)×(max-v)×100</span>
+          <span class="param-label">参数n</span>
+          <input type="number" id="weight-param-n" class="param-input" value="${weightParamN}" min="0" max="10" step="0.1" />
+        </div>
+        <div class="crit-control">
+          <label class="crit-toggle">
+            <input type="checkbox" id="crit-enabled" ${critEnabled ? 'checked' : ''}>
+            <span class="crit-toggle-slider"></span>
+            <span class="crit-toggle-label">暴击</span>
+          </label>
+          <div class="crit-rate-control">
+            <span class="crit-rate-label">概率</span>
+            <input type="number" id="crit-rate" class="crit-rate-input" value="${Math.round(critRate * 100)}" min="0" max="100" step="1" ${!critEnabled ? 'disabled' : ''}>
+            <span class="crit-rate-unit">%</span>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -158,7 +190,38 @@ function getStageInfo(level: number): string {
   return `阶段${stageNum} (可加点至${stage.totalPoints}点${nextUnlock !== '已满' ? `, 下档${nextUnlock}级` : ''})`;
 }
 
-// 渲染引导石
+// 渲染暴击石（方案A：单独面板）
+export function renderCritStones(
+  critStones: CritStone[],
+  totalAdded: number
+): string {
+  return `
+    <div class="crit-stones-panel">
+      <div class="crit-stones-title">⚡ 暴击石</div>
+      <div class="crit-stones-list">
+        ${critStones.map(stone => {
+          // 检查是否可用
+          const isAvailable = totalAdded >= stone.minPoints && totalAdded <= stone.maxPoints;
+          const isDisabled = !isAvailable || stone.count === 0;
+          
+          return `
+            <label class="crit-stone-item ${isDisabled ? 'disabled' : ''} ${stone.selected ? 'selected' : ''}" 
+                   data-crit-type="${stone.type}">
+              <input type="checkbox" class="crit-checkbox" 
+                     data-crit-type="${stone.type}"
+                     ${stone.selected ? 'checked' : ''} 
+                     ${isDisabled ? 'disabled' : ''}>
+              <span class="stone-icon">${stone.type === '初级' ? '🟠' : '🔴'}</span>
+              <span class="stone-name">${stone.name}</span>
+              <span class="stone-count">×${stone.count}</span>
+              <span class="stone-range">(${stone.minPoints}-${stone.maxPoints === 999 ? '∞' : stone.maxPoints}点)</span>
+            </label>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
 export function renderGuidanceStones(
   stones: GuidanceStone[],
   operator: Operator,
@@ -218,6 +281,7 @@ export function renderUpgradePanel(
   operator: Operator, 
   canUpgrade: boolean, 
   stones: GuidanceStone[],
+  critStones: CritStone[],
   n: number
 ): string {
   const cost = getCostPerUpgrade(operator);
@@ -245,12 +309,15 @@ export function renderUpgradePanel(
       </button>
       <button class="btn-reset" id="btn-reset">🔄 一键清零</button>
     </div>
-    ${renderGuidanceStones(stones, operator, totalAdded)}
+    <div class="stones-container">
+      ${renderGuidanceStones(stones, operator, totalAdded)}
+      ${renderCritStones(critStones, totalAdded)}
+    </div>
   `;
 }
 
 // 渲染主应用
-export function renderApp(state: GameState, lastUpgradedTalent: string | null): string {
+export function renderApp(state: GameState, lastUpgradedTalent: string | null, lastIsCrit: boolean = false, lastAddedPoints: number = 1): string {
   const selectedOperator = state.operators.find(o => o.id === state.selectedOperator);
   
   return `
@@ -260,7 +327,7 @@ export function renderApp(state: GameState, lastUpgradedTalent: string | null): 
         <p class="subtitle">全新养成机制原型验证</p>
       </header>
       
-      ${renderResourcePanel(state.talentPoints, state.weightParamN)}
+      ${renderResourcePanel(state.talentPoints, state.weightParamN, state.critEnabled, state.critRate)}
       
       <div class="main-content">
         <aside class="operator-list">
@@ -271,7 +338,7 @@ export function renderApp(state: GameState, lastUpgradedTalent: string | null): 
         </aside>
         
         <main class="operator-detail">
-          ${selectedOperator ? renderOperatorDetail(selectedOperator, state.talentPoints, lastUpgradedTalent, state.weightParamN, state.guidanceStones) : renderEmptyState()}
+          ${selectedOperator ? renderOperatorDetail(selectedOperator, state.talentPoints, lastUpgradedTalent, lastIsCrit, lastAddedPoints, state.weightParamN, state.guidanceStones, state.critStones) : renderEmptyState()}
         </main>
       </div>
     </div>
@@ -282,9 +349,12 @@ export function renderApp(state: GameState, lastUpgradedTalent: string | null): 
 function renderOperatorDetail(
   operator: Operator, 
   talentPoints: number, 
-  lastUpgradedTalent: string | null, 
+  lastUpgradedTalent: string | null,
+  lastIsCrit: boolean,
+  lastAddedPoints: number,
   n: number,
-  guidanceStones: GuidanceStone[]
+  guidanceStones: GuidanceStone[],
+  critStones: CritStone[]
 ): string {
   const cost = getCostPerUpgrade(operator);
   const remaining = getRemainingPointsInStage(operator);
@@ -333,12 +403,12 @@ function renderOperatorDetail(
             // 判断是否被引导石高亮（交集：必须同时符合所有选中的引导石）
             const isHighlighted = selectedStoneTypes.length === 0 || 
               selectedStoneTypes.every(stoneType => isTalentMatchGuidanceStone(t.name, stoneType));
-            return renderTalentBar(t, t.name === lastUpgradedTalent, maxTotalMax, n, isHighlighted);
+            return renderTalentBar(t, t.name === lastUpgradedTalent, lastIsCrit, lastAddedPoints, maxTotalMax, n, isHighlighted);
           }).join('')}
         </div>
       </div>
       
-      ${renderUpgradePanel(operator, canUpgrade, guidanceStones, n)}
+      ${renderUpgradePanel(operator, canUpgrade, guidanceStones, critStones, n)}
     </div>
   `;
 }
