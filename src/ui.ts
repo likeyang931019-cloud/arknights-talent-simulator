@@ -27,11 +27,14 @@ export function renderTalentBar(
   addedPoints: number,
   maxTotalMax: number, 
   n: number,
-  isHighlighted: boolean = true
+  isHighlighted: boolean = true,
+  critEnabled: boolean = true
 ): string {
-  // 进度条总长度按总上限+1比例缩放（预留溢出空间）
-  const displayMax = talent.totalMax + 1; // +1 用于显示溢出格子
-  const barWidthPercentage = (displayMax / (maxTotalMax + 1)) * 100;
+  // 根据暴击开关决定是否预留溢出空间
+  const showOverflowSlot = critEnabled;
+  const displayMax = showOverflowSlot ? talent.totalMax + 1 : talent.totalMax;
+  const displayMaxTotal = showOverflowSlot ? maxTotalMax + 1 : maxTotalMax;
+  const barWidthPercentage = (displayMax / displayMaxTotal) * 100;
   // 计算权重（新公式）并四舍五入取整
   const weight = Math.round(calculateTalentWeight(talent, n));
   
@@ -446,7 +449,7 @@ function renderOperatorDetail(
             // 判断是否被引导石高亮（交集：必须同时符合所有选中的引导石）
             const isHighlighted = selectedStoneTypes.length === 0 || 
               selectedStoneTypes.every(stoneType => isTalentMatchGuidanceStone(t.name, stoneType));
-            return renderTalentBar(t, t.name === lastUpgradedTalent, t.name === lastUpgradedTalent && lastIsCrit, lastAddedPoints, maxTotalMax, n, isHighlighted);
+            return renderTalentBar(t, t.name === lastUpgradedTalent, t.name === lastUpgradedTalent && lastIsCrit, lastAddedPoints, maxTotalMax, n, isHighlighted, critEnabled);
           }).join('')}
         </div>
       </div>
