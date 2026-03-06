@@ -1,7 +1,7 @@
 // 明日方舟天赋养成模拟器 - UI组件
 import type { Operator, TalentConfig, GameState, GuidanceStone, TalentType, CritStone } from './types';
 import { TALENT_COMBAT_TYPE, TALENT_NATURE_TYPE, isTalentMatchGuidanceStone, getStageByLevel } from './types';
-import { getTotalAddedPoints, getRemainingPointsInStage, getCostPerUpgrade, getCurrentStagePoints, calculateTalentWeight } from './gameLogic';
+import { getTotalAddedPoints, getCostPerUpgrade, getCurrentStagePoints, calculateTalentWeight } from './gameLogic';
 
 // 飘字动画状态
 interface FloatingText {
@@ -285,7 +285,9 @@ export function renderUpgradePanel(
   n: number
 ): string {
   const cost = getCostPerUpgrade(operator);
-  const remaining = getRemainingPointsInStage(operator);
+  
+  // 检查是否有属性未达上限（等级只影响上限，不影响可加多少点）
+  const hasUpgradableTalent = operator.talents.some(t => t.current < t.totalMax);
   const totalAdded = getTotalAddedPoints(operator);
   const stage = getStageByLevel(operator.currentLevel);
   
@@ -294,10 +296,10 @@ export function renderUpgradePanel(
     statusText = '需精二30级解锁养成';
   } else if (totalAdded >= 42) {
     statusText = '已满级';
-  } else if (remaining <= 0) {
-    statusText = '请提升等级';
+  } else if (!hasUpgradableTalent) {
+    statusText = '所有属性已达上限';
   } else {
-    statusText = `本阶段剩余${remaining}点`;
+    statusText = '可继续加点';
   }
 
   return `
@@ -358,7 +360,9 @@ function renderOperatorDetail(
   critEnabled: boolean
 ): string {
   const cost = getCostPerUpgrade(operator);
-  const remaining = getRemainingPointsInStage(operator);
+  
+  // 检查是否有属性未达上限（等级只影响上限，不影响可加多少点）
+  const hasUpgradableTalent = operator.talents.some(t => t.current < t.totalMax);
   
   // 获取所有选中的引导石
   const selectedStones = guidanceStones.filter(s => s.selected && s.count > 0);
@@ -373,8 +377,8 @@ function renderOperatorDetail(
     hasMatchingTalentForStones = matchingTalents.length > 0;
   }
   
-  // 只有天赋点足够、有剩余点数、且有符合引导石条件的属性时才能加点
-  const canUpgrade = talentPoints >= cost && remaining > 0 && hasMatchingTalentForStones;
+  // 只有天赋点足够、有未达上限属性、且有符合引导石条件的属性时才能加点
+  const canUpgrade = talentPoints >= cost && hasUpgradableTalent && hasMatchingTalentForStones;
   
   // 计算该干员中最大的总上限，用于进度条比例
   const maxTotalMax = Math.max(...operator.talents.map(t => t.totalMax));
