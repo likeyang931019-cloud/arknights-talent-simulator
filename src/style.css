@@ -1028,10 +1028,44 @@ body {
   font-weight: bold;
 }
 
-.crit-stone-item .stone-range {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-left: 4px;
+/* 溢出格子样式 */
+.talent-segment.overflow-slot {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--bg-dark),
+    var(--bg-dark) 3px,
+    rgba(255, 152, 0, 0.2) 3px,
+    rgba(255, 152, 0, 0.2) 6px
+  );
+  border: 1px dashed rgba(255, 152, 0, 0.5);
+}
+
+.talent-segment.overflow-filled {
+  background: linear-gradient(180deg, #ff5722, #d84315);
+  box-shadow: 0 0 10px rgba(255, 87, 34, 0.6);
+  animation: overflowPulse 0.6s ease;
+}
+
+@keyframes overflowPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); box-shadow: 0 0 15px rgba(255, 87, 34, 0.8); }
+}
+
+/* 溢出状态的数值显示 */
+.talent-values .current-value.overflow {
+  color: #ff5722;
+  font-weight: bold;
+  text-shadow: 0 0 8px rgba(255, 87, 34, 0.6);
+}
+
+/* 溢出状态的进度条容器 */
+.talent-bar-container.overflow {
+  animation: overflowContainerFlash 0.6s ease;
+}
+
+@keyframes overflowContainerFlash {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 87, 34, 0); }
+  50% { box-shadow: 0 0 20px rgba(255, 87, 34, 0.4); }
 }
 
 /* 抑制暴击石样式 */

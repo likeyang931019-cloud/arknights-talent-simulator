@@ -143,16 +143,14 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
     addedPoints = isCrit ? 2 : 1;
   }
 
-  // 检查是否会超出总上限
-  if (selectedTalent.current + addedPoints > selectedTalent.totalMax) {
-    // 超出总上限，只加1点，不触发暴击
-    isCrit = false;
-    addedPoints = 1;
-    consumedCritStoneType = undefined; // 暴击石不消耗
+  // 允许暴击超出总上限1点（只在暴击时）
+  if (isCrit && selectedTalent.current + addedPoints > selectedTalent.totalMax) {
+    // 暴击允许超出上限1点
+    addedPoints = selectedTalent.totalMax - selectedTalent.current + 1; // 填满剩余空间再多1点
   }
 
   const critText = isCrit ? '暴击！' : '';
-  const pointsText = addedPoints === 2 ? '+2' : '+1';
+  const pointsText = addedPoints >= 2 ? '+2' : '+1';
 
   return {
     success: true,
@@ -186,7 +184,10 @@ export function applyUpgrade(
         ...o,
         talents: o.talents.map(t => {
           if (t.name !== result.upgradedTalent) return t;
-          return { ...t, current: Math.min(t.current + addedPoints, t.totalMax) };
+          // 允许暴击超出上限1点
+          const newCurrent = t.current + addedPoints;
+          const maxAllowed = t.totalMax + 1; // 允许超出1点
+          return { ...t, current: Math.min(newCurrent, maxAllowed) };
         }),
         totalSpent: o.totalSpent + (result.cost || 0),  // 累加实际消耗
       };

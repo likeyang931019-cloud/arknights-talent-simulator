@@ -29,21 +29,27 @@ export function renderTalentBar(
   n: number,
   isHighlighted: boolean = true
 ): string {
-  // 进度条总长度按总上限比例缩放
-  const barWidthPercentage = (talent.totalMax / maxTotalMax) * 100;
+  // 进度条总长度按总上限+1比例缩放（预留溢出空间）
+  const displayMax = talent.totalMax + 1; // +1 用于显示溢出格子
+  const barWidthPercentage = (displayMax / (maxTotalMax + 1)) * 100;
   // 计算权重（新公式）并四舍五入取整
   const weight = Math.round(calculateTalentWeight(talent, n));
   
-  // 生成分段式格子
+  // 检查是否超出上限
+  const isOverflow = talent.current > talent.totalMax;
+  
+  // 生成分段式格子（多生成1个用于溢出显示）
   const segments = [];
-  for (let i = 0; i < talent.totalMax; i++) {
+  for (let i = 0; i < displayMax; i++) {
     const isFilled = i < talent.current;
     const isWithinCurrentStage = i < talent.currentMax;
-    const isBeyondStage = i >= talent.currentMax;
+    const isBeyondStage = i >= talent.currentMax && i < talent.totalMax;
+    const isOverflowSlot = i === talent.totalMax; // 最后一个格子是溢出格子
     segments.push({
       isFilled,
       isWithinCurrentStage,
       isBeyondStage,
+      isOverflowSlot,
       index: i,
     });
   }
@@ -61,8 +67,11 @@ export function renderTalentBar(
     }
   }
   
+  // 数值显示：如果溢出，显示为 "totalMax+"
+  const currentValueDisplay = isOverflow ? `${talent.totalMax}+` : talent.current.toString();
+  
   return `
-    <div class="talent-bar-container ${isHighlighted ? 'highlighted' : 'dimmed'} ${isUpgraded && isCrit ? 'crit-upgrade' : ''}" data-talent="${talent.name}">
+    <div class="talent-bar-container ${isHighlighted ? 'highlighted' : 'dimmed'} ${isUpgraded && isCrit ? 'crit-upgrade' : ''} ${isOverflow ? 'overflow' : ''}" data-talent="${talent.name}">
       <div class="talent-header">
         <span class="talent-name">${talent.name}</span>
         <span class="talent-tags">
@@ -71,15 +80,15 @@ export function renderTalentBar(
         </span>
         <span class="talent-weight" title="随机权重 (n=${n})">权重:${weight}</span>
         <span class="talent-values">
-          <span class="current-value ${isUpgraded ? 'upgraded' : ''} ${isCrit ? 'crit' : ''}">${talent.current}</span>
+          <span class="current-value ${isUpgraded ? 'upgraded' : ''} ${isCrit ? 'crit' : ''} ${isOverflow ? 'overflow' : ''}">${currentValueDisplay}</span>
           <span class="separator">/</span>
           <span class="current-max">${talent.currentMax}</span>
           <span class="separator">(</span>
-          <span class="total-max">${talent.totalMax}</span>
+          <span class="total-max">${talent.totalMax}${isOverflow ? '+' : ''}</span>
           <span class="separator">)</span>
         </span>
       </div>
-      <div class="talent-progress-wrapper segmented ${isUpgraded && isCrit ? 'crit' : ''}" style="width: ${barWidthPercentage}%">
+      <div class="talent-progress-wrapper segmented ${isUpgraded && isCrit ? 'crit' : ''} ${isOverflow ? 'overflow' : ''}" style="width: ${barWidthPercentage}%">
         <div class="talent-segments">
           ${segments.map((seg, idx) => {
             const isLast = idx === segments.length - 1;
@@ -92,9 +101,14 @@ export function renderTalentBar(
             if (isUpgraded && upgradedIndices.has(idx)) {
               classes.push(isCrit ? 'crit-upgraded' : 'upgraded');
             }
+            // 溢出格子样式
+            if (seg.isOverflowSlot) classes.push('overflow-slot');
+            // 溢出格子填充时有特殊样式
+            if (seg.isOverflowSlot && seg.isFilled) {
+              classes.push('overflow-filled');
+            }
             if (isFirst) classes.push('first');
             if (isLast) classes.push('last');
-            const statusText = seg.isFilled ? '已获得' : seg.isWithinCurrentStage ? '当前阶段可加点' : '后续阶段解锁';
             return `<div class="${classes.join(' ')}"></div>`;
           }).join('')}
         </div>
