@@ -312,9 +312,10 @@ function handleUpgrade(): void {
     return;
   }
 
-  const remaining = getRemainingPointsInStage(operator);
-  if (remaining <= 0) {
-    showToast('当前阶段已加满，请提升等级！', 'warning');
+  // 检查是否还有属性未达上限（等级只影响上限，不影响可加多少点）
+  const hasUpgradableTalent = operator.talents.some(t => t.current < t.totalMax);
+  if (!hasUpgradableTalent) {
+    showToast('所有属性已达总上限！', 'warning');
     return;
   }
 
