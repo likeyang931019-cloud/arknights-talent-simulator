@@ -166,11 +166,9 @@ export function renderLevelControl(level: number): string {
     <div class="level-control">
       <span class="level-label">精二等级</span>
       <div class="level-input-group">
-        <button class="btn-level" data-delta="-10">-10</button>
-        <button class="btn-level" data-delta="-1">-1</button>
+        <button class="btn-level" data-delta="-20">-20</button>
         <input type="number" id="level-input" value="${level}" min="1" max="70" />
-        <button class="btn-level" data-delta="1">+1</button>
-        <button class="btn-level" data-delta="10">+10</button>
+        <button class="btn-level" data-delta="20">+20</button>
       </div>
       <span class="stage-info" id="stage-info">${getStageInfo(level)}</span>
     </div>

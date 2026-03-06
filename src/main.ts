@@ -398,8 +398,9 @@ function updateUpgradeButton(): void {
   if (!operator) return;
 
   const cost = getCostPerUpgrade(operator);
-  const remaining = getRemainingPointsInStage(operator);
-  const canUpgrade = state.talentPoints >= cost && remaining > 0;
+  // 检查是否还有属性未达上限（等级只影响上限，不影响可加多少点）
+  const hasUpgradableTalent = operator.talents.some(t => t.current < t.totalMax);
+  const canUpgrade = state.talentPoints >= cost && hasUpgradableTalent;
 
   upgradeBtn.disabled = !canUpgrade;
   upgradeBtn.classList.toggle('disabled', !canUpgrade);
