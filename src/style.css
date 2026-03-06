@@ -751,6 +751,29 @@ body {
   background: linear-gradient(180deg, #3498db, #2980b9);
 }
 
+/* 当前阶段可用但未获得的格子 - 浅色半透明 */
+.talent-segment.available {
+  background: rgba(52, 152, 219, 0.15);
+  border: 1px dashed rgba(52, 152, 219, 0.4);
+}
+
+/* 超出当前阶段的格子 - 深灰色锁定状态 */
+.talent-segment.locked {
+  background: var(--bg-dark);
+  opacity: 0.4;
+  position: relative;
+}
+
+.talent-segment.locked::after {
+  content: '🔒';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  opacity: 0.5;
+  font-size: 8px;
+}
+
 .talent-segment.filled.upgraded {
   background: linear-gradient(180deg, #2ecc71, #27ae60);
   box-shadow: 0 0 8px rgba(46, 204, 113, 0.6);

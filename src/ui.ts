@@ -36,10 +36,12 @@ export function renderTalentBar(
   const segments = [];
   for (let i = 0; i < talent.totalMax; i++) {
     const isFilled = i < talent.current;
-    const isCurrentMax = i < talent.currentMax;
+    const isWithinCurrentStage = i < talent.currentMax;
+    const isBeyondStage = i >= talent.currentMax;
     segments.push({
       isFilled,
-      isCurrentMax,
+      isWithinCurrentStage,
+      isBeyondStage,
       index: i,
     });
   }
@@ -69,10 +71,13 @@ export function renderTalentBar(
             const isFirst = idx === 0;
             let classes = ['talent-segment'];
             if (seg.isFilled) classes.push('filled');
+            else if (seg.isWithinCurrentStage) classes.push('available');
+            else if (seg.isBeyondStage) classes.push('locked');
             if (isUpgraded && seg.isFilled && idx === talent.current - 1) classes.push('upgraded');
             if (isFirst) classes.push('first');
             if (isLast) classes.push('last');
-            return `<div class="${classes.join(' ')}" title="${idx + 1}"></div>`;
+            const statusText = seg.isFilled ? '已获得' : seg.isWithinCurrentStage ? '当前阶段可加点' : '后续阶段解锁';
+            return `<div class="${classes.join(' ')}" title="${idx + 1} - ${statusText}"></div>`;
           }).join('')}
         </div>
         ${isUpgraded ? `<div class="floating-text">+1</div>` : ''}
