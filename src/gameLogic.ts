@@ -126,9 +126,17 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
 
   // 检查是否使用暴击石（优先判定）
   if (selectedCritStone) {
-    isCrit = true;
-    addedPoints = 2;
-    consumedCritStoneType = selectedCritStone.type;
+    // 抑制暴击石：必定不暴击，只加1点
+    if (selectedCritStone.isInhibitor) {
+      isCrit = false;
+      addedPoints = 1;
+      consumedCritStoneType = selectedCritStone.type;
+    } else {
+      // 普通暴击石（初级/高级）：必定暴击，加2点
+      isCrit = true;
+      addedPoints = 2;
+      consumedCritStoneType = selectedCritStone.type;
+    }
   } else if (state.critEnabled) {
     // 随机暴击判定
     isCrit = Math.random() < state.critRate;

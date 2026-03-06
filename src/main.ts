@@ -242,13 +242,18 @@ function setCritRate(rate: number): void {
 
 // 切换暴击石选择
 function toggleCritStone(critType: string, isSelected: boolean): void {
+  // 判断当前点击的是否为抑制暴击石
+  const clickedStone = state.critStones.find(s => s.type === critType);
+  const isInhibitor = clickedStone?.isInhibitor ?? false;
+  
   state = {
     ...state,
     critStones: state.critStones.map(stone => {
-      // 暴击石之间互斥，只能选一个
       if (stone.type === critType) {
+        // 点击的石头：切换状态
         return { ...stone, selected: isSelected };
       }
+      // 其他石头：取消选中
       return { ...stone, selected: false };
     }),
   };

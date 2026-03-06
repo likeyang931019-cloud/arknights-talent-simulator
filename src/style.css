@@ -1033,3 +1033,18 @@ body {
   color: var(--text-muted);
   margin-left: 4px;
 }
+
+/* 抑制暴击石样式 */
+.crit-stone-item.inhibitor:hover:not(.disabled) {
+  border-color: #2196f3;
+}
+
+.crit-stone-item.inhibitor.selected {
+  background: rgba(33, 150, 243, 0.2);
+  border-color: #2196f3;
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.3);
+}
+
+.crit-stone-item.inhibitor .stone-count {
+  color: #2196f3;
+}

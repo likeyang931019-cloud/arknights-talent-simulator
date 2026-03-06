@@ -194,23 +194,47 @@ export function renderCritStones(
   totalAdded: number,
   critEnabled: boolean
 ): string {
+  // 检查是否有选中的暴击石
+  const selectedStone = critStones.find(s => s.selected);
+  const selectedIsInhibitor = selectedStone?.isInhibitor ?? false;
+  const hasNormalStoneSelected = selectedStone && !selectedStone.isInhibitor;
+  
   return `
     <div class="crit-stones-panel ${!critEnabled ? 'disabled' : ''}">
       <div class="crit-stones-title">⚡ 暴击石 ${!critEnabled ? '(暴击已关闭)' : ''}</div>
       <div class="crit-stones-list">
         ${critStones.map(stone => {
           // 检查是否可用（需要暴击开启）
-          const isAvailable = critEnabled && totalAdded >= stone.minPoints && totalAdded <= stone.maxPoints;
+          let isAvailable = critEnabled && totalAdded >= stone.minPoints && totalAdded <= stone.maxPoints;
+          
+          // 互斥逻辑：抑制暴击石与普通暴击石互斥
+          if (isAvailable) {
+            if (stone.isInhibitor && hasNormalStoneSelected) {
+              // 抑制暴击石：普通暴击石选中时禁用
+              isAvailable = false;
+            } else if (!stone.isInhibitor && selectedIsInhibitor) {
+              // 普通暴击石：抑制暴击石选中时禁用
+              isAvailable = false;
+            }
+          }
+          
           const isDisabled = !isAvailable || stone.count === 0;
           
+          // 图标映射
+          const iconMap: Record<string, string> = {
+            '初级': '🟠',
+            '高级': '🔴',
+            '抑制': '🔵'
+          };
+          
           return `
-            <label class="crit-stone-item ${isDisabled ? 'disabled' : ''} ${stone.selected ? 'selected' : ''}" 
+            <label class="crit-stone-item ${isDisabled ? 'disabled' : ''} ${stone.selected ? 'selected' : ''} ${stone.isInhibitor ? 'inhibitor' : ''}" 
                    data-crit-type="${stone.type}">
               <input type="checkbox" class="crit-checkbox" 
                      data-crit-type="${stone.type}"
                      ${stone.selected ? 'checked' : ''} 
                      ${isDisabled ? 'disabled' : ''}>
-              <span class="stone-icon">${stone.type === '初级' ? '🟠' : '🔴'}</span>
+              <span class="stone-icon">${iconMap[stone.type]}</span>
               <span class="stone-name">${stone.name}</span>
               <span class="stone-count">×${stone.count}</span>
               <span class="stone-range">(${stone.minPoints}-${stone.maxPoints === 999 ? '∞' : stone.maxPoints}点)</span>

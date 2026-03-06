@@ -172,22 +172,24 @@ export function isTalentMatchGuidanceStone(
 }
 
 // ==================== 暴击石系统 ====================
-export type CritStoneType = '初级' | '高级';
+export type CritStoneType = '初级' | '高级' | '抑制';
 
 export interface CritStone {
   type: CritStoneType;
   name: string;
   count: number;
   selected: boolean;
-  minPoints: number;  // 最低总加点数要求（初级14，高级28）
-  maxPoints: number;  // 最高总加点数限制（初级27，高级无限制用999）
+  minPoints: number;  // 最低总加点数要求（初级14，高级28，抑制28）
+  maxPoints: number;  // 最高总加点数限制（初级27，高级/抑制无限制用999）
+  isInhibitor?: boolean;  // 是否为抑制暴击石（勾选后必定不暴击）
 }
 
 // 创建初始暴击石
 export function createInitialCritStones(): CritStone[] {
   return [
-    { type: '初级', name: '初级暴击石', count: 5, selected: false, minPoints: 14, maxPoints: 27 },
-    { type: '高级', name: '高级暴击石', count: 5, selected: false, minPoints: 28, maxPoints: 999 },
+    { type: '初级', name: '初级暴击石', count: 5, selected: false, minPoints: 14, maxPoints: 27, isInhibitor: false },
+    { type: '高级', name: '高级暴击石', count: 5, selected: false, minPoints: 28, maxPoints: 999, isInhibitor: false },
+    { type: '抑制', name: '抑制暴击石', count: 3, selected: false, minPoints: 28, maxPoints: 999, isInhibitor: true },
   ];
 }
 
