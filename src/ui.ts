@@ -185,7 +185,7 @@ function getStageInfo(level: number): string {
   
   const stageNum = stage.totalPoints === 14 ? 1 : stage.totalPoints === 28 ? 2 : 3;
   const nextUnlock = stage.totalPoints === 14 ? '50' : stage.totalPoints === 28 ? '70' : '已满';
-  return `阶段${stageNum} (可加点至${stage.totalPoints}点${nextUnlock !== '已满' ? `, 下档${nextUnlock}级` : ''})`;
+  return `阶段${stageNum}${nextUnlock !== '已满' ? ` (下档${nextUnlock}级)` : ''}`;
 }
 
 // 渲染暴击石（方案A：单独面板）
