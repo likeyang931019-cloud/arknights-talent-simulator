@@ -19,7 +19,7 @@ export function createFloatingText(text: string, talentName: string): FloatingTe
   };
 }
 
-// 渲染属性条
+// 渲染属性条（分段式进度条）
 export function renderTalentBar(
   talent: TalentConfig, 
   isUpgraded: boolean, 
@@ -27,12 +27,22 @@ export function renderTalentBar(
   n: number,
   isHighlighted: boolean = true
 ): string {
-  const percentage = (talent.current / talent.totalMax) * 100;
-  const currentPercentage = (talent.currentMax / talent.totalMax) * 100;
   // 进度条总长度按总上限比例缩放
   const barWidthPercentage = (talent.totalMax / maxTotalMax) * 100;
   // 计算权重（新公式）并四舍五入取整
   const weight = Math.round(calculateTalentWeight(talent, n));
+  
+  // 生成分段式格子
+  const segments = [];
+  for (let i = 0; i < talent.totalMax; i++) {
+    const isFilled = i < talent.current;
+    const isCurrentMax = i < talent.currentMax;
+    segments.push({
+      isFilled,
+      isCurrentMax,
+      index: i,
+    });
+  }
   
   return `
     <div class="talent-bar-container ${isHighlighted ? 'highlighted' : 'dimmed'}" data-talent="${talent.name}">
@@ -52,10 +62,18 @@ export function renderTalentBar(
           <span class="separator">)</span>
         </span>
       </div>
-      <div class="talent-progress-wrapper" style="width: ${barWidthPercentage}%">
-        <div class="talent-progress-bg">
-          <div class="talent-progress-current-max" style="width: ${currentPercentage}%"></div>
-          <div class="talent-progress-fill ${isUpgraded ? 'upgraded' : ''}" style="width: ${percentage}%"></div>
+      <div class="talent-progress-wrapper segmented" style="width: ${barWidthPercentage}%">
+        <div class="talent-segments">
+          ${segments.map((seg, idx) => {
+            const isLast = idx === segments.length - 1;
+            const isFirst = idx === 0;
+            let classes = ['talent-segment'];
+            if (seg.isFilled) classes.push('filled');
+            if (isUpgraded && seg.isFilled && idx === talent.current - 1) classes.push('upgraded');
+            if (isFirst) classes.push('first');
+            if (isLast) classes.push('last');
+            return `<div class="${classes.join(' ')}" title="${idx + 1}"></div>`;
+          }).join('')}
         </div>
         ${isUpgraded ? `<div class="floating-text">+1</div>` : ''}
       </div>

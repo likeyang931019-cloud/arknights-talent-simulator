@@ -719,3 +719,50 @@ body {
   font-family: monospace;
   margin-right: 8px;
 }
+
+/* 分段式进度条 */
+.talent-progress-wrapper.segmented {
+  background: transparent;
+}
+
+.talent-segments {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+}
+
+.talent-segment {
+  flex: 1;
+  height: 100%;
+  background: var(--bg-dark);
+  transition: all 0.3s ease;
+}
+
+.talent-segment.first {
+  border-radius: 10px 0 0 10px;
+}
+
+.talent-segment.last {
+  border-radius: 0 10px 10px 0;
+}
+
+.talent-segment.filled {
+  background: linear-gradient(180deg, #3498db, #2980b9);
+}
+
+.talent-segment.filled.upgraded {
+  background: linear-gradient(180deg, #2ecc71, #27ae60);
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.6);
+  animation: segmentPulse 0.5s ease;
+}
+
+@keyframes segmentPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* 分段式进度条上的飘字 */
+.talent-progress-wrapper.segmented .floating-text {
+  right: -30px;
+}
