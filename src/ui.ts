@@ -309,7 +309,7 @@ export function renderUpgradePanel(
         <span class="btn-text">加点</span>
         <span class="btn-cost">-${cost}</span>
       </button>
-      <button class="btn-reset" id="btn-reset">🔄 一键清零</button>
+      <button class="btn-reset" id="btn-reset">🔄 一键重置（源石x1）</button>
     </div>
     <div class="stones-container">
       ${renderGuidanceStones(stones, operator, totalAdded)}
