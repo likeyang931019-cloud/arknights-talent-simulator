@@ -52,6 +52,7 @@ export interface UpgradeResult {
   addedPoints?: number;  // 实际增加的点数
   consumedStones?: GuidanceStoneType[];  // 消耗的引导石类型列表
   stoneCostMultiplier?: number;  // 引导石消耗倍数
+  cleanedStones?: GuidanceStone[];  // 清理后的引导石状态（数量不足时自动取消勾选）
 }
 
 // 等级阶段定义
