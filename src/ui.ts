@@ -379,7 +379,6 @@ export function renderApp(state: GameState, lastUpgradedTalent: string | null, l
     <div class="arknights-talent-simulator">
       <header class="app-header">
         <h1>🎮 明日方舟天赋养成模拟器</h1>
-        <p class="subtitle">全新养成机制原型验证</p>
       </header>
       
       ${renderResourcePanel(state.talentPoints, state.weightParamN, state.critEnabled, state.critRate)}
