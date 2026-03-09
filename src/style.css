@@ -389,6 +389,8 @@ body {
   background: var(--bg-light);
   padding: 6px 8px;
   border-radius: 5px;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .talent-header {
@@ -396,20 +398,36 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 4px;
+  gap: 8px;
+}
+
+.talent-info-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .talent-name {
   font-weight: bold;
   font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.talent-tags {
+  display: flex;
+  gap: 2px;
+  margin-right: 4px;
+  flex-shrink: 0;
 }
 
 .talent-weight {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--warning-color);
   background: rgba(251, 197, 49, 0.15);
-  padding: 1px 4px;
+  padding: 1px 3px;
   border-radius: 3px;
-  margin-left: 4px;
+  flex-shrink: 0;
 }
 
 .talent-values {
@@ -417,6 +435,8 @@ body {
   align-items: center;
   gap: 2px;
   font-size: 0.8rem;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .current-value {
@@ -447,7 +467,7 @@ body {
   position: relative;
   height: 14px;
   width: 100%;
-  min-width: 20%;
+  max-width: 100%;
   transition: width 0.5s ease;
 }
 
@@ -711,12 +731,6 @@ body {
 }
 
 /* 属性标签 */
-.talent-tags {
-  display: flex;
-  gap: 2px;
-  margin-right: 4px;
-}
-
 .tag {
   font-size: 0.6rem;
   padding: 1px 3px;

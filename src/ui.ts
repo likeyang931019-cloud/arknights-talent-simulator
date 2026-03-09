@@ -76,12 +76,14 @@ export function renderTalentBar(
   return `
     <div class="talent-bar-container ${isHighlighted ? 'highlighted' : 'dimmed'} ${isUpgraded && isCrit ? 'crit-upgrade' : ''} ${isOverflow ? 'overflow' : ''}" data-talent="${talent.name}">
       <div class="talent-header">
-        <span class="talent-name">${talent.name}</span>
-        <span class="talent-tags">
-          <span class="tag tag-combat">${TALENT_COMBAT_TYPE[talent.name]}</span>
-          <span class="tag tag-nature">${TALENT_NATURE_TYPE[talent.name]}</span>
-        </span>
-        <span class="talent-weight" title="随机权重 (n=${n})">权重:${weight}</span>
+        <div class="talent-info-left">
+          <span class="talent-name">${talent.name}</span>
+          <span class="talent-tags">
+            <span class="tag tag-combat">${TALENT_COMBAT_TYPE[talent.name]}</span>
+            <span class="tag tag-nature">${TALENT_NATURE_TYPE[talent.name]}</span>
+          </span>
+          <span class="talent-weight" title="随机权重 (n=${n})">权重:${weight}</span>
+        </div>
         <span class="talent-values">
           <span class="current-value ${isUpgraded ? 'upgraded' : ''} ${isCrit ? 'crit' : ''} ${isOverflow ? 'overflow' : ''}">${currentValueDisplay}</span>
           <span class="separator">/</span>
