@@ -72,7 +72,7 @@ export function cleanupInvalidGuidanceStones(
 }
 
 // 执行加点（支持引导石和暴击）
-export function upgradeTalent(state: GameState, operatorId: string): UpgradeResult & { consumedStone?: GuidanceStoneType; consumedCritStone?: CritStoneType } {
+export function upgradeTalent(state: GameState, operatorId: string): UpgradeResult {
   const operator = state.operators.find(o => o.id === operatorId);
   if (!operator) {
     return { success: false, message: '干员不存在' };
@@ -97,23 +97,11 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
   // 计算引导石消耗倍数
   const stoneCostMultiplier = getStoneCostMultiplier(totalAdded);
   
-  // 先清理无效的引导石勾选状态（数量不足时自动取消勾选）
-  const { cleanedStones, autoUnchecked } = cleanupInvalidGuidanceStones(state.guidanceStones, totalAdded);
-  
   // 获取所有选中的引导石（必须已加14点后才可使用）
   const selectedStones = totalAdded >= 14 
-    ? cleanedStones.filter(s => s.selected && s.count > 0)
+    ? state.guidanceStones.filter(s => s.selected && s.count >= stoneCostMultiplier)
     : [];
   
-  // 检查引导石数量是否足够（28点以上需要每种2个）
-  if (selectedStones.length > 0) {
-    const insufficientStones = selectedStones.filter(s => s.count < stoneCostMultiplier);
-    if (insufficientStones.length > 0) {
-      const stoneNames = insufficientStones.map(s => s.name).join('、');
-      return { success: false, message: `${stoneNames} 数量不足（需要${stoneCostMultiplier}个）` };
-    }
-  }
-
   // 获取选中的暴击石
   const selectedCritStone = state.critStones.find(s => s.selected && s.count > 0);
 
@@ -204,24 +192,19 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
     consumedCritStone: consumedCritStoneType,
     isCrit,
     addedPoints,
-    cleanedStones, // 返回清理后的引导石状态
-    autoUncheckedStones: autoUnchecked.length > 0 ? autoUnchecked : undefined, // 被自动取消勾选的引导石
   };
 }
 
 // 更新游戏状态（加点后）
 export function applyUpgrade(
   state: GameState, 
-  result: UpgradeResult & { consumedStone?: GuidanceStoneType; consumedCritStone?: CritStoneType; cleanedStones?: GameState['guidanceStones']; autoUncheckedStones?: GuidanceStoneType[] }, 
+  result: UpgradeResult, 
   operatorId: string
 ): GameState {
   if (!result.success || !result.cost) return state;
 
   const addedPoints = result.addedPoints || 1;
   const stoneCostMultiplier = result.stoneCostMultiplier || 1;
-
-  // 如果有清理后的引导石状态，先应用；否则使用当前状态
-  const baseGuidanceStones = result.cleanedStones || state.guidanceStones;
 
   return {
     ...state,
@@ -241,14 +224,14 @@ export function applyUpgrade(
         totalSpent: o.totalSpent + (result.cost || 0),  // 累加实际消耗
       };
     }),
-    // 消耗引导石（支持多倍消耗），同时保留清理后的选中状态
+    // 消耗引导石（支持多倍消耗）
     guidanceStones: result.consumedStones && result.consumedStones.length > 0
-      ? baseGuidanceStones.map(s => {
+      ? state.guidanceStones.map(s => {
           if (!result.consumedStones!.includes(s.type)) return s;
           const newCount = s.count - stoneCostMultiplier;
           return { ...s, count: newCount, selected: newCount > 0 };
         })
-      : baseGuidanceStones,
+      : state.guidanceStones,
     // 消耗暴击石（数量归0时才取消勾选）
     critStones: result.consumedCritStone
       ? state.critStones.map(s =>

@@ -18,7 +18,7 @@
 
 import type { GameState, Operator } from './types';
 import { createInitialOperators, updateOperatorLevel, resetOperator } from './data';
-import { upgradeTalent, applyUpgrade, getTotalAddedPoints, getRemainingPointsInStage, getCostPerUpgrade } from './gameLogic';
+import { upgradeTalent, applyUpgrade, getTotalAddedPoints, getRemainingPointsInStage, getCostPerUpgrade, cleanupInvalidGuidanceStones } from './gameLogic';
 import { renderApp } from './ui';
 import { createInitialGuidanceStones, createInitialCritStones } from './types';
 import './style.css';
@@ -332,20 +332,33 @@ function handleUpgrade(): void {
     lastAddedPoints = result.addedPoints || 1;
     state = applyUpgrade(state, result, state.selectedOperator);
     
+    // 加点结束后，检查剩余引导石是否足够支撑下一次加点
+    const updatedOperator = state.operators.find(o => o.id === state.selectedOperator);
+    if (updatedOperator) {
+      const newTotalAdded = getTotalAddedPoints(updatedOperator);
+      const { cleanedStones, autoUnchecked } = cleanupInvalidGuidanceStones(state.guidanceStones, newTotalAdded);
+      
+      // 如果有被自动取消勾选的引导石，更新状态并提示用户
+      if (autoUnchecked.length > 0) {
+        state = {
+          ...state,
+          guidanceStones: cleanedStones,
+        };
+        const stoneNames = autoUnchecked.join('、');
+        setTimeout(() => {
+          showToast(`${stoneNames} 数量不足以支撑下次加点，已自动取消勾选`, 'warning');
+        }, 500);
+      }
+    }
+    
     updateResourceDisplay();
     render();
     
-    const stoneMsg = result.consumedStone ? ` (消耗引导石-${result.consumedStone})` : '';
+    const stoneMsg = result.consumedStones && result.consumedStones.length > 0 
+      ? ` (消耗引导石-${result.consumedStones.join('、')})` 
+      : '';
     const critMsg = result.isCrit ? ' 暴击！' : '';
     showToast(`${operator.name} 的 ${result.upgradedTalent} 提升了${critMsg}！${stoneMsg}`, 'success');
-    
-    // 提示被自动取消勾选的引导石
-    if (result.autoUncheckedStones && result.autoUncheckedStones.length > 0) {
-      const stoneNames = result.autoUncheckedStones.join('、');
-      setTimeout(() => {
-        showToast(`${stoneNames} 数量不足已自动取消勾选`, 'warning');
-      }, 500);
-    }
     
     // 清除飘字动画状态
     setTimeout(() => {
