@@ -51,19 +51,24 @@ export function getStoneCostMultiplier(totalAdded: number): number {
 
 // 清理无效的引导石勾选状态
 // 当引导石数量不足以支付当前消耗时，自动取消勾选
+// 返回清理后的状态和被取消勾选的引导石类型列表
 export function cleanupInvalidGuidanceStones(
   guidanceStones: GameState['guidanceStones'],
   totalAdded: number
-): GameState['guidanceStones'] {
+): { cleanedStones: GameState['guidanceStones']; autoUnchecked: GuidanceStoneType[] } {
   const stoneCostMultiplier = getStoneCostMultiplier(totalAdded);
+  const autoUnchecked: GuidanceStoneType[] = [];
   
-  return guidanceStones.map(stone => {
+  const cleanedStones = guidanceStones.map(stone => {
     // 如果勾选了但数量不足，自动取消勾选
     if (stone.selected && stone.count < stoneCostMultiplier) {
+      autoUnchecked.push(stone.type);
       return { ...stone, selected: false };
     }
     return stone;
   });
+  
+  return { cleanedStones, autoUnchecked };
 }
 
 // 执行加点（支持引导石和暴击）
@@ -93,7 +98,7 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
   const stoneCostMultiplier = getStoneCostMultiplier(totalAdded);
   
   // 先清理无效的引导石勾选状态（数量不足时自动取消勾选）
-  const cleanedStones = cleanupInvalidGuidanceStones(state.guidanceStones, totalAdded);
+  const { cleanedStones, autoUnchecked } = cleanupInvalidGuidanceStones(state.guidanceStones, totalAdded);
   
   // 获取所有选中的引导石（必须已加14点后才可使用）
   const selectedStones = totalAdded >= 14 
@@ -200,13 +205,14 @@ export function upgradeTalent(state: GameState, operatorId: string): UpgradeResu
     isCrit,
     addedPoints,
     cleanedStones, // 返回清理后的引导石状态
+    autoUncheckedStones: autoUnchecked.length > 0 ? autoUnchecked : undefined, // 被自动取消勾选的引导石
   };
 }
 
 // 更新游戏状态（加点后）
 export function applyUpgrade(
   state: GameState, 
-  result: UpgradeResult & { consumedStone?: GuidanceStoneType; consumedCritStone?: CritStoneType; cleanedStones?: GameState['guidanceStones'] }, 
+  result: UpgradeResult & { consumedStone?: GuidanceStoneType; consumedCritStone?: CritStoneType; cleanedStones?: GameState['guidanceStones']; autoUncheckedStones?: GuidanceStoneType[] }, 
   operatorId: string
 ): GameState {
   if (!result.success || !result.cost) return state;

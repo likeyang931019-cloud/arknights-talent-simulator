@@ -339,6 +339,14 @@ function handleUpgrade(): void {
     const critMsg = result.isCrit ? ' 暴击！' : '';
     showToast(`${operator.name} 的 ${result.upgradedTalent} 提升了${critMsg}！${stoneMsg}`, 'success');
     
+    // 提示被自动取消勾选的引导石
+    if (result.autoUncheckedStones && result.autoUncheckedStones.length > 0) {
+      const stoneNames = result.autoUncheckedStones.join('、');
+      setTimeout(() => {
+        showToast(`${stoneNames} 数量不足已自动取消勾选`, 'warning');
+      }, 500);
+    }
+    
     // 清除飘字动画状态
     setTimeout(() => {
       lastUpgradedTalent = null;
