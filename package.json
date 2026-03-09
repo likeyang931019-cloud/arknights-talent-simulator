@@ -1,20 +1,24 @@
 {
-  "name": "projects",
+  "name": "arknights-talent-simulator",
   "version": "1.0.0",
-  "description": "Vanilla TypeScript application with Vite (HTML + CSS + TS)",
+  "description": "明日方舟天赋养成模拟器 - 桌面版",
   "scripts": {
     "build": "bash ./scripts/build.sh",
     "dev": "bash ./scripts/dev.sh",
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint",
     "start": "bash ./scripts/start.sh",
-    "ts-check": "tsc -p tsconfig.json"
+    "ts-check": "tsc -p tsconfig.json",
+    "tauri": "tauri",
+    "tauri-dev": "tauri dev",
+    "tauri-build": "tauri build"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.95.3",
     "dotenv": "^17.2.3"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.10.1",
     "autoprefixer": "^10.4.20",
     "coze-coding-dev-sdk": "^0.7.17",
     "eslint": "^9",
