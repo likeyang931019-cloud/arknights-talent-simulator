@@ -3,9 +3,15 @@ name: Build Desktop App
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+    tags:
+      - 'v*'
   workflow_dispatch:
+    inputs:
+      release:
+        description: '创建发布版本'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -15,16 +21,25 @@ jobs:
         include:
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
+            arch: 'aarch64'
+            name: 'macOS-Apple-Silicon'
           - platform: 'macos-latest'
             args: '--target x86_64-apple-darwin'
+            arch: 'x86_64'
+            name: 'macOS-Intel'
           - platform: 'ubuntu-22.04'
             args: ''
+            arch: 'x86_64'
+            name: 'Linux'
           - platform: 'windows-latest'
             args: ''
+            arch: 'x86_64'
+            name: 'Windows'
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -50,14 +65,70 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install
 
-      - name: Build Tauri App
+      # 提取版本号
+      - name: Get version
+        id: get_version
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # 非标签触发时，只构建不上传 Release
+      - name: Build Tauri App (No Release)
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') && !github.event.inputs.release }}
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: app-v__VERSION__
-          releaseName: '明日方舟天赋模拟器 v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
+          args: ${{ matrix.args }}
+
+      # 标签触发或手动选择发布时，创建 Release
+      - name: Build Tauri App (With Release)
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event.inputs.release }}
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v${{ env.VERSION }}
+          releaseName: '🎮 明日方舟天赋模拟器 v${{ env.VERSION }}'
+          releaseBody: |
+            ## 下载安装包
+
+            根据你的操作系统选择对应的安装包：
+
+            | 平台 | 文件 | 说明 |
+            |------|------|------|
+            | 🪟 Windows | `.msi` | 安装程序，双击运行 |
+            | 🍎 macOS (Intel) | `.dmg` | Intel 芯片 Mac |
+            | 🍎 macOS (Apple Silicon) | `.dmg` | M1/M2/M3 芯片 Mac |
+            | 🐧 Linux | `.AppImage` | 免安装，双击运行 |
+            | 🐧 Linux | `.deb` | Debian/Ubuntu 安装包 |
+
+            ## 使用说明
+
+            1. 下载对应平台的安装包
+            2. 安装/运行应用
+            3. 开始模拟干员天赋养成！
+
+            ## 版本信息
+
+            - 版本号: v${{ env.VERSION }}
+            - 构建时间: ${{ github.event.head_commit.timestamp }}
+            - 提交: ${{ github.sha }}
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+      # 上传构建产物（方便预览）
+      - name: Upload artifacts
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') && !github.event.inputs.release }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}-build
+          path: |
+            src-tauri/target/release/bundle/**/*.msi
+            src-tauri/target/release/bundle/**/*.dmg
+            src-tauri/target/release/bundle/**/*.AppImage
+            src-tauri/target/release/bundle/**/*.deb
+          if-no-files-found: ignore
